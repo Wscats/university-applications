@@ -57,36 +57,36 @@ Skill 能识别以下任何一种名称（中/英/缩写均可）：
 
 | 大学 | 可识别的名称 | 模板文件 |
 |------|------------|---------|
-| 香港大学 | HKU、港大、香港大学、The University of Hong Kong | `universities/01-hku.md` |
-| 香港中文大学 | CUHK、中大、香港中文大学、Chinese University | `universities/02-cuhk.md` |
-| 香港科技大学 | HKUST、UST、科大、香港科技大学、Science & Tech | `universities/03-hkust.md` |
-| 香港理工大学 | PolyU、理工、香港理工大学、Polytechnic | `universities/04-polyu.md` |
-| 香港城市大学 | CityU、城大、香港城市大学、City University | `universities/05-cityu.md` |
-| 香港浸会大学 | HKBU、浸大、浸會、香港浸会大学、Baptist | `universities/06-hkbu.md` |
-| 岭南大学 | LingU、嶺南、岭南大学、Lingnan | `universities/07-lingu.md` |
-| 香港教育大学 | EdUHK、教大、香港教育大学、Education University | `universities/08-eduhk.md` |
+| 香港大学 | HKU、港大、香港大学、The University of Hong Kong | `skill/universities/01-hku.md` |
+| 香港中文大学 | CUHK、中大、香港中文大学、Chinese University | `skill/universities/02-cuhk.md` |
+| 香港科技大学 | HKUST、UST、科大、香港科技大学、Science & Tech | `skill/universities/03-hkust.md` |
+| 香港理工大学 | PolyU、理工、香港理工大学、Polytechnic | `skill/universities/04-polyu.md` |
+| 香港城市大学 | CityU、城大、香港城市大学、City University | `skill/universities/05-cityu.md` |
+| 香港浸会大学 | HKBU、浸大、浸會、香港浸会大学、Baptist | `skill/universities/06-hkbu.md` |
+| 岭南大学 | LingU、嶺南、岭南大学、Lingnan | `skill/universities/07-lingu.md` |
+| 香港教育大学 | EdUHK、教大、香港教育大学、Education University | `skill/universities/08-eduhk.md` |
 
 **自资 / 私立院校（14 所）：**
 
 | 院校 | 可识别的名称 | 模板文件 |
 |------|------------|---------|
-| 香港都会大学 | HKMU、都會、都会大学、OUHK、公开大学 | `universities/09-hkmu.md` |
-| 香港树仁大学 | HKSYU、树仁、仁大 | `universities/10-hksyu.md` |
-| 香港恒生大学 | HSUHK、恒大、恒生 | `universities/11-hsuhk.md` |
-| 圣方济各大学 | SFU、珠海学院、珠海 | `universities/12-sfu.md` |
-| 香港演艺学院 | HKAPA、演艺、演艺学院 | `universities/13-hkapa.md` |
-| 东华学院 | TWC、东华、东华学院 | `universities/14-twc.md` |
-| 香港能仁专上学院 | NYC、能仁 | `universities/15-nyc.md` |
-| 香港高等教育科技学院 | THEi、高科院 | `universities/16-thei.md` |
-| 宏恩基督教学院 | GCC、宏恩 | `universities/19-gcc.md` |
-| 明爱专上学院 | CIHE、明爱 | `universities/20-cihe.md` |
-| 港专学院 | HKCT、港专 | `universities/21-hkct.md` |
-| 香港伍伦贡学院 | UOWCHK、伍伦贡 | `universities/22-uowchk.md` |
-| 职业训练局 | VTC、职训局 | `universities/23-vtc.md` |
+| 香港都会大学 | HKMU、都會、都会大学、OUHK、公开大学 | `skill/universities/09-hkmu.md` |
+| 香港树仁大学 | HKSYU、树仁、仁大 | `skill/universities/10-hksyu.md` |
+| 香港恒生大学 | HSUHK、恒大、恒生 | `skill/universities/11-hsuhk.md` |
+| 圣方济各大学 | SFU、珠海学院、珠海 | `skill/universities/12-sfu.md` |
+| 香港演艺学院 | HKAPA、演艺、演艺学院 | `skill/universities/13-hkapa.md` |
+| 东华学院 | TWC、东华、东华学院 | `skill/universities/14-twc.md` |
+| 香港能仁专上学院 | NYC、能仁 | `skill/universities/15-nyc.md` |
+| 香港高等教育科技学院 | THEi、高科院 | `skill/universities/16-thei.md` |
+| 宏恩基督教学院 | GCC、宏恩 | `skill/universities/19-gcc.md` |
+| 明爱专上学院 | CIHE、明爱 | `skill/universities/20-cihe.md` |
+| 港专学院 | HKCT、港专 | `skill/universities/21-hkct.md` |
+| 香港伍伦贡学院 | UOWCHK、伍伦贡 | `skill/universities/22-uowchk.md` |
+| 职业训练局 | VTC、职训局 | `skill/universities/23-vtc.md` |
 
 > 📌 **院校更名说明**
-> - 珠海学院 → 圣方济各大学（2022 年更名，见 `17-chuhai-redirect.md`）
-> - 香港公开大学 → 香港都会大学（2021 年更名，见 `18-ouhk-redirect.md`）
+> - 珠海学院 → 圣方济各大学（2022 年更名，见 `skill/universities/17-chuhai-redirect.md`）
+> - 香港公开大学 → 香港都会大学（2021 年更名，见 `skill/universities/18-ouhk-redirect.md`）
 
 > ⚠️ **注意**：部分自资院校以本科为主，采集时需验证其硕士课程开设情况。若无硕士课程将在输出中标注。
 
@@ -189,35 +189,35 @@ Skill 能识别以下任何一种名称（中/英/缩写均可）：
 
 ```
 Phase 1: 准备
-  → 读取本 skill.md 的规范定义（第 3 节）
+  → 读取本 SKILL.md 的规范定义（第 3 节）
   → 记录当前日期用于数据时效追踪
 
 Phase 2: 逐校采集（共 22 所）
 
   [UGC 资助大学 - 8 所]
-  Step 2.1:  读取 universities/01-hku.md    → 采集港大所有硕士项目
-  Step 2.2:  读取 universities/02-cuhk.md   → 采集中大所有硕士项目
-  Step 2.3:  读取 universities/03-hkust.md  → 采集科大所有硕士项目
-  Step 2.4:  读取 universities/04-polyu.md  → 采集理工所有硕士项目
-  Step 2.5:  读取 universities/05-cityu.md  → 采集城大所有硕士项目
-  Step 2.6:  读取 universities/06-hkbu.md   → 采集浸大所有硕士项目
-  Step 2.7:  读取 universities/07-lingu.md  → 采集岭南所有硕士项目
-  Step 2.8:  读取 universities/08-eduhk.md  → 采集教大所有硕士项目
+  Step 2.1:  读取 skill/universities/01-hku.md    → 采集港大所有硕士项目
+  Step 2.2:  读取 skill/universities/02-cuhk.md   → 采集中大所有硕士项目
+  Step 2.3:  读取 skill/universities/03-hkust.md  → 采集科大所有硕士项目
+  Step 2.4:  读取 skill/universities/04-polyu.md  → 采集理工所有硕士项目
+  Step 2.5:  读取 skill/universities/05-cityu.md  → 采集城大所有硕士项目
+  Step 2.6:  读取 skill/universities/06-hkbu.md   → 采集浸大所有硕士项目
+  Step 2.7:  读取 skill/universities/07-lingu.md  → 采集岭南所有硕士项目
+  Step 2.8:  读取 skill/universities/08-eduhk.md  → 采集教大所有硕士项目
 
   [自资 / 私立院校 - 14 所]
-  Step 2.9:  读取 universities/09-hkmu.md   → 采集都会大学所有硕士项目
-  Step 2.10: 读取 universities/10-hksyu.md  → 采集树仁大学所有硕士项目
-  Step 2.11: 读取 universities/11-hsuhk.md  → 采集恒生大学所有硕士项目
-  Step 2.12: 读取 universities/12-sfu.md    → 采集圣方济各大学所有硕士项目
-  Step 2.13: 读取 universities/13-hkapa.md  → 采集演艺学院所有硕士项目
-  Step 2.14: 读取 universities/14-twc.md    → 采集东华学院所有硕士项目
-  Step 2.15: 读取 universities/15-nyc.md    → 采集能仁学院硕士项目（如有）
-  Step 2.16: 读取 universities/16-thei.md   → 采集高科院所有硕士项目
-  Step 2.17: 读取 universities/19-gcc.md    → 采集宏恩学院硕士项目（如有）
-  Step 2.18: 读取 universities/20-cihe.md   → 采集明爱学院硕士项目（如有）
-  Step 2.19: 读取 universities/21-hkct.md   → 采集港专学院硕士项目（如有）
-  Step 2.20: 读取 universities/22-uowchk.md → 采集伍伦贡学院硕士项目（如有）
-  Step 2.21: 读取 universities/23-vtc.md    → 采集职训局硕士项目（如有）
+  Step 2.9:  读取 skill/universities/09-hkmu.md   → 采集都会大学所有硕士项目
+  Step 2.10: 读取 skill/universities/10-hksyu.md  → 采集树仁大学所有硕士项目
+  Step 2.11: 读取 skill/universities/11-hsuhk.md  → 采集恒生大学所有硕士项目
+  Step 2.12: 读取 skill/universities/12-sfu.md    → 采集圣方济各大学所有硕士项目
+  Step 2.13: 读取 skill/universities/13-hkapa.md  → 采集演艺学院所有硕士项目
+  Step 2.14: 读取 skill/universities/14-twc.md    → 采集东华学院所有硕士项目
+  Step 2.15: 读取 skill/universities/15-nyc.md    → 采集能仁学院硕士项目（如有）
+  Step 2.16: 读取 skill/universities/16-thei.md   → 采集高科院所有硕士项目
+  Step 2.17: 读取 skill/universities/19-gcc.md    → 采集宏恩学院硕士项目（如有）
+  Step 2.18: 读取 skill/universities/20-cihe.md   → 采集明爱学院硕士项目（如有）
+  Step 2.19: 读取 skill/universities/21-hkct.md   → 采集港专学院硕士项目（如有）
+  Step 2.20: 读取 skill/universities/22-uowchk.md → 采集伍伦贡学院硕士项目（如有）
+  Step 2.21: 读取 skill/universities/23-vtc.md    → 采集职训局硕士项目（如有）
 
   ※ 部分小型院校可能不提供硕士课程，若无则记录"该院校目前未开设硕士课程"
 
@@ -260,10 +260,10 @@ Phase 6: 交付
 ```
 Step 1: 识别大学
   → 从用户输入中匹配大学名称（参考第 2 节名称识别表）
-  → 定位对应的 universities/XX-xxx.md 模板文件
+  → 定位对应的 skill/universities/XX-xxx.md 模板文件
 
 Step 2: 读取规范
-  → 读取本 skill.md 的数据规范（第 3 节）
+  → 读取本 SKILL.md 的数据规范（第 3 节）
 
 Step 3: 采集数据
   → 读取对应大学模板，采集该校所有硕士项目
@@ -288,11 +288,11 @@ Step 1: 确认数据已采集（若未采集，先运行采集工作流）
 Step 2: 识别目标格式
   | 用户说的 | 对应格式 | 模板文件 |
   |---------|---------|---------|
-  | Excel / 表格 / CSV / TSV | Excel | output-templates/excel-template.md |
-  | Word / 文档 / doc | Word | output-templates/word-template.md |
-  | PDF / 打印 | PDF | output-templates/pdf-template.md |
-  | HTML / 网页 / web | HTML | output-templates/html-template.md |
-  | Markdown / MD / 文本 | Markdown | output-templates/markdown-template.md |
+  | Excel / 表格 / CSV / TSV | Excel | skill/output-templates/excel-template.md |
+  | Word / 文档 / doc | Word | skill/output-templates/word-template.md |
+  | PDF / 打印 | PDF | skill/output-templates/pdf-template.md |
+  | HTML / 网页 / web | HTML | skill/output-templates/html-template.md |
+  | Markdown / MD / 文本 | Markdown | skill/output-templates/markdown-template.md |
   | 所有格式 / all | 全部 5 种 | 所有模板 |
 
 Step 3: 应用模板，生成输出
@@ -411,53 +411,63 @@ Step 4: 多格式输出顺序（生成全部时）
 ## 9. 文件结构索引
 
 ```
-skill/
-├── skill.md                           ← 本文件（Skill 入口 & 完整定义）
-├── README.md                          # English usage guide
-├── README-CN.md                       # 中文使用指南
-├── SKILL-SPEC.md                      # 规范定义（详细版）
-├── DATA-SCHEMA.md                     # 数据结构定义（详细版）
-├── COLLECTION-PROMPT.md               # 主采集 Prompt
+/                                      ← 项目根目录
+├── SKILL.md                           ← 本文件（Skill 入口 & 完整定义）
+├── SKILL-SPEC.md                      ← 技能规范定义
 │
-├── universities/                      # 22 所院校独立采集模板
-│   ├── 01-hku.md                      # 香港大学
-│   ├── 02-cuhk.md                     # 香港中文大学
-│   ├── 03-hkust.md                    # 香港科技大学
-│   ├── 04-polyu.md                    # 香港理工大学
-│   ├── 05-cityu.md                    # 香港城市大学
-│   ├── 06-hkbu.md                     # 香港浸会大学
-│   ├── 07-lingu.md                    # 岭南大学
-│   ├── 08-eduhk.md                    # 香港教育大学
-│   ├── 09-hkmu.md                     # 香港都会大学（原公开大学）
-│   ├── 10-hksyu.md                    # 香港树仁大学
-│   ├── 11-hsuhk.md                    # 香港恒生大学
-│   ├── 12-sfu.md                      # 圣方济各大学（原珠海学院）
-│   ├── 13-hkapa.md                    # 香港演艺学院
-│   ├── 14-twc.md                      # 东华学院
-│   ├── 15-nyc.md                      # 香港能仁专上学院
-│   ├── 16-thei.md                     # 香港高等教育科技学院
-│   ├── 17-chuhai-redirect.md          # → 12-sfu.md（珠海学院已更名）
-│   ├── 18-ouhk-redirect.md            # → 09-hkmu.md（公开大学已更名）
-│   ├── 19-gcc.md                      # 宏恩基督教学院
-│   ├── 20-cihe.md                     # 明爱专上学院
-│   ├── 21-hkct.md                     # 港专学院
-│   ├── 22-uowchk.md                   # 香港伍伦贡学院
-│   └── 23-vtc.md                      # 职业训练局
-│
-├── output-templates/                  # 5 种输出格式模板
-│   ├── excel-template.md              # Excel / TSV
-│   ├── word-template.md               # Word 文档
-│   ├── pdf-template.md                # PDF
-│   ├── html-template.md               # HTML 交互网页
-│   └── markdown-template.md           # Markdown
-│
-├── workflows/                         # 工作流编排（详细版）
-│   ├── full-collection.md             # 全量采集
-│   ├── single-university.md           # 单校采集
-│   └── format-conversion.md           # 格式转换
-│
-└── examples/                          # 示例输出
-    └── sample-output.md               # 预期输出样本
+└── skill/                             # Skill 实现目录
+    ├── README.md                      # English usage guide
+    ├── README-CN.md                   # 中文使用指南
+    ├── SKILL-SPEC.md                  # 规范定义（详细版，同根目录）
+    ├── DATA-SCHEMA.md                 # 数据结构定义（详细版）
+    ├── COLLECTION-PROMPT.md           # 主采集 Prompt
+    │
+    ├── universities/                  # 22 所院校独立采集模板
+    │   ├── 01-hku.md                  # 香港大学
+    │   ├── 02-cuhk.md                 # 香港中文大学
+    │   ├── 03-hkust.md                # 香港科技大学
+    │   ├── 04-polyu.md                # 香港理工大学
+    │   ├── 05-cityu.md                # 香港城市大学
+    │   ├── 06-hkbu.md                 # 香港浸会大学
+    │   ├── 07-lingu.md                # 岭南大学
+    │   ├── 08-eduhk.md                # 香港教育大学
+    │   ├── 09-hkmu.md                 # 香港都会大学（原公开大学）
+    │   ├── 10-hksyu.md                # 香港树仁大学
+    │   ├── 11-hsuhk.md                # 香港恒生大学
+    │   ├── 12-sfu.md                  # 圣方济各大学（原珠海学院）
+    │   ├── 13-hkapa.md                # 香港演艺学院
+    │   ├── 14-twc.md                  # 东华学院
+    │   ├── 15-nyc.md                  # 香港能仁专上学院
+    │   ├── 16-thei.md                 # 香港高等教育科技学院
+    │   ├── 17-chuhai-redirect.md      # → 12-sfu.md（珠海学院已更名）
+    │   ├── 18-ouhk-redirect.md        # → 09-hkmu.md（公开大学已更名）
+    │   ├── 19-gcc.md                  # 宏恩基督教学院
+    │   ├── 20-cihe.md                 # 明爱专上学院
+    │   ├── 21-hkct.md                 # 港专学院
+    │   ├── 22-uowchk.md              # 香港伍伦贡学院
+    │   └── 23-vtc.md                  # 职业训练局
+    │
+    ├── output-templates/              # 5 种输出格式模板
+    │   ├── excel-template.md          # Excel / TSV
+    │   ├── word-template.md           # Word 文档
+    │   ├── pdf-template.md            # PDF
+    │   ├── html-template.md           # HTML 交互网页
+    │   └── markdown-template.md       # Markdown
+    │
+    ├── workflows/                     # 工作流编排（详细版）
+    │   ├── full-collection.md         # 全量采集
+    │   ├── single-university.md       # 单校采集
+    │   └── format-conversion.md       # 格式转换
+    │
+    ├── output/                        # 生成的输出文件
+    │   ├── hk_admissions.md           # Markdown 输出
+    │   ├── hk_admissions.tsv          # Excel (TSV) 输出
+    │   ├── hk_admissions.html         # HTML 交互网页
+    │   ├── hk_admissions_word.html    # Word 兼容文档
+    │   └── hk_admissions_print.html   # PDF 打印优化
+    │
+    └── examples/                      # 示例输出
+        └── sample-output.md           # 预期输出样本
 ```
 
 ---
@@ -466,16 +476,16 @@ skill/
 
 ### 最简使用
 
-将本项目 `skill/` 目录提供给 AI 助手，然后说：
+将本项目提供给 AI 助手，然后说：
 
 ```
-请阅读 skill/skill.md，然后收集所有香港大学硕士招生信息，输出所有格式。
+请阅读 SKILL.md，然后收集所有香港大学硕士招生信息，输出所有格式。
 ```
 
 ### 仅采集特定大学
 
 ```
-请阅读 skill/skill.md，只收集港大和中大的硕士项目，输出为 HTML 网页。
+请阅读 SKILL.md，只收集港大和中大的硕士项目，输出为 HTML 网页。
 ```
 
 ### 仅转换格式
@@ -486,4 +496,4 @@ skill/
 
 ---
 
-> 📖 详细英文说明: [README.md](README.md) | 📖 详细中文说明: [README-CN.md](README-CN.md)
+> 📖 详细英文说明: [README.md](skill/README.md) | 📖 详细中文说明: [README-CN.md](skill/README-CN.md)

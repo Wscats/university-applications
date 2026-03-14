@@ -103,7 +103,7 @@ The skill supports 5 output formats:
 ```
 Step 1: COLLECT    → Gather data from each university's official site
 Step 2: VALIDATE   → Cross-check data fields, flag uncertainties
-Step 3: ORGANIZE   → Structure data per DATA-SCHEMA.md
+Step 3: ORGANIZE   → Structure data per skill/DATA-SCHEMA.md
 Step 4: FORMAT     → Apply output template(s) as requested
 Step 5: DELIVER    → Present formatted output to user
 ```
