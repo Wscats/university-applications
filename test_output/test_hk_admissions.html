@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hong Kong Universities Master's Admissions</title>
+    <style>
+        :root {
+            --primary: #2f5496;
+            --primary-light: #4472c4;
+            --bg: #f5f7fa;
+            --card-bg: #ffffff;
+            --text: #333333;
+            --text-light: #666666;
+            --border: #e0e4e8;
+            --success: #28a745;
+            --warning: #ffc107;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+            margin-bottom: 30px;
+            border-radius: 12px;
+        }
+        header h1 { font-size: 2.2em; margin-bottom: 8px; }
+        header p { font-size: 1.1em; opacity: 0.9; }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border-left: 4px solid var(--primary);
+        }
+        .stat-card .number { font-size: 2em; font-weight: 700; color: var(--primary); }
+        .stat-card .label { font-size: 0.9em; color: var(--text-light); }
+        .search-bar {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .search-bar input, .search-bar select {
+            padding: 10px 16px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        .search-bar input:focus, .search-bar select:focus {
+            border-color: var(--primary);
+        }
+        .search-bar input { flex: 1; min-width: 300px; }
+        .uni-section {
+            background: var(--card-bg);
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+        .uni-header {
+            background: var(--primary);
+            color: white;
+            padding: 18px 24px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .uni-header h2 { font-size: 1.3em; }
+        .uni-header .badge {
+            background: rgba(255,255,255,0.2);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+        }
+        .uni-body { padding: 0; }
+        .program-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .program-table th {
+            background: #f0f4f8;
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.85em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--primary);
+            border-bottom: 2px solid var(--border);
+            position: sticky;
+            top: 0;
+        }
+        .program-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.9em;
+            vertical-align: top;
+        }
+        .program-table tr:hover { background: #f8fafd; }
+        .program-table tr:last-child td { border-bottom: none; }
+        .program-table a {
+            color: var(--primary-light);
+            text-decoration: none;
+        }
+        .program-table a:hover { text-decoration: underline; }
+        .tag {
+            display: inline-block;
+            background: #e8f0fe;
+            color: var(--primary);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: 500;
+        }
+        footer {
+            text-align: center;
+            padding: 30px;
+            color: var(--text-light);
+            font-size: 0.85em;
+        }
+        @media (max-width: 768px) {
+            header h1 { font-size: 1.5em; }
+            .program-table { font-size: 0.8em; }
+            .program-table th, .program-table td { padding: 8px; }
+        }
+        .collapsible-content { display: block; }
+        .collapsed .collapsible-content { display: none; }
+        .toggle-icon { transition: transform 0.3s; }
+        .collapsed .toggle-icon { transform: rotate(-90deg); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎓 Hong Kong Universities Master's Admissions</h1>
+            <p>香港各大学硕士研究生招生信息汇总</p>
+            <p style="font-size: 0.85em; margin-top: 8px; opacity: 0.7;">
+                Generated on 2026-03-14 13:29 | All data from official university websites
+            </p>
+        </header>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="number">15</div>
+                <div class="label">Total Programmes</div>
+            </div>
+            <div class="stat-card">
+                <div class="number">9</div>
+                <div class="label">Universities</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="number">3</div>
+                <div class="label">HKU</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="number">2</div>
+                <div class="label">CUHK</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="number">2</div>
+                <div class="label">HKUST</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="number">2</div>
+                <div class="label">PolyU</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="number">2</div>
+                <div class="label">CityU</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="number">1</div>
+                <div class="label">HKBU</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="number">1</div>
+                <div class="label">EdUHK</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="number">1</div>
+                <div class="label">LU</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="number">1</div>
+                <div class="label">HKMU</div>
+            </div>
+            
+        </div>
+
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="🔍 Search programmes, universities, degree types...">
+            <select id="uniFilter" onchange="filterByUni()">
+                <option value="">All Universities</option>
+                
+                <option value="The University of Hong Kong">The University of Hong Kong</option>
+                
+                <option value="The Chinese University of Hong Kong">The Chinese University of Hong Kong</option>
+                
+                <option value="The Hong Kong University of Science and Technology">The Hong Kong University of Science and Technology</option>
+                
+                <option value="The Hong Kong Polytechnic University">The Hong Kong Polytechnic University</option>
+                
+                <option value="City University of Hong Kong">City University of Hong Kong</option>
+                
+                <option value="Hong Kong Baptist University">Hong Kong Baptist University</option>
+                
+                <option value="The Education University of Hong Kong">The Education University of Hong Kong</option>
+                
+                <option value="Lingnan University">Lingnan University</option>
+                
+                <option value="Hong Kong Metropolitan University">Hong Kong Metropolitan University</option>
+                
+            </select>
+        </div>
+
+        
+        <div class="uni-section" data-university="City University of Hong Kong">
+            <div class="uni-header" onclick="toggleSection(this)">
+                <h2>
+                    <span class="toggle-icon">▼</span>
+                    City University of Hong Kong
+                    
+                     (香港城市大学)
+                    
+                </h2>
+                <span class="badge">2 programmes</span>
+            </div>
+            <div class="uni-body collapsible-content">
+                <table class="program-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Programme</th>
+                            <th>Degree</th>
+                            <th>Faculty</th>
+                            <th>Tuition</th>
+                            <th>Deadline</th>
+                            <th>English Req.</th>
+                            <th>Duration</th>
+                            <th>Link</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+                        <tr class="program-row">
+                            <td>1</td>
+                            <td>
+                                <strong>MSc in Finance</strong>
+                                
+                            </td>
+                            <td><span class="tag">MSc</span></td>
+                            <td>College of Business</td>
+                            <td>HKD 282,000</td>
+                            <td>
+                                2026-03-31
+                                
+                            </td>
+                            <td>IELTS 6.5 or TOEFL iBT 79 or CET-6 490</td>
+                            <td>1 year full-time</td>
+                            <td>
+                                
+                                <a href="https://www.cb.cityu.edu.hk/ef/programmes/mscfin/" target="_blank" rel="noopener">Official Page ↗</a>
+                                
+                            </td>
+                        </tr>
+                        
+                        <tr class="program-row">
+                            <td>2</td>
+                            <td>
+                                <strong>MSc in Data Science</strong>
+                                
+                            </td>
+                            <td><span class="tag">MSc</span></td>
+                            <td>College of Science</td>
+                            <td>HKD 198,000</td>
+                            <td>
+                                2026-04-30
+                                
+                            </td>
+                            <td>IELTS 6.5 or TOEFL iBT 79</td>
+                            <td>1 year full-time</td>
+                            <td>
+                                
+                                <a href="https://www.cityu.edu.hk/ma/MSDataSci/" target="_blank" rel="noopener">Official Page ↗</a>
+                                
+                            </td>
+                        </tr>
+                        
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="uni-section" data-university="Hong Kong Baptist University">
+            <div class="uni-header" onclick="toggleSection(this)">
+                <h2>
+                    <span class="toggle-icon">▼</span>
+                    Hong Kong Baptist University
+                    
+                     (香港浸会大学)
+                    
+                </h2>
+                <span class="badge">1 programmes</span>
+            </div>
+            <div class="uni-body collapsible-content">
+                <table class="program-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Programme</th>
+                            <th>Degree</th>
+                            <th>Faculty</th>
+                            <th>Tuition</th>
+                            <th>Deadline</th>
+                            <th>English Req.</th>
+                            <th>Duration</th>
+                            <th>Link</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+                        <tr class="program-row">
+                            <td>1</td>
+                            <td>
+                                <strong>MA in International Journalism Studies</strong>
+                                
+                            </td>
+                            <td><span class="tag">MA</span></td>
+                            <td>School of Communication</td>
+                            <td>HKD 140,000</td>
+                            <td>
+                                2026-04-05
+                                
+                            </td>
+                            <td>IELTS 6.5 or TOEFL iBT 79</td>
+                            <td>1 year full-time</td>
+                            <td>
+                                
+                                <a href="https://gs.hkbu.edu.hk/programmes/ma-in-international-journalism-studies" target="_blank" rel="noopener">Official Page ↗</a>
+                                
+                            </td>
+                        </tr>
+                        
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="uni-section" data-university="Hong Kong Metropolitan University">
+            <div class="uni-header" onclick="toggleSection(this)">
+                <h2>
+                    <span class="toggle-icon">▼</span>
+                    Hong Kong Metropolitan University
+                    
+                     (香港都会大学)
+                    
+                </h2>
+                <span class="badge">1 programmes</span>
+            </div>
+            <div class="uni-body collapsible-content">
+                <table class="program-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Programme</th>
+                            <th>Degree</th>
+                            <th>Faculty</th>
+                            <th>Tuition</th>
+                            <th>Deadline</th>
+                            <th>English Req.</th>
+                            <th>Duration</th>
+                            <th>Link</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+                        <tr class="program-row">
+                            <td>1</td>
+                            <td>
+                                <strong>MSc in Environmental Science and Management</strong>
+                                
+                            </td>
+                            <td><span class="tag">MSc</span></td>
+                            <td>School of Science and Technology</td>
+                            <td>HKD 109,200</td>
+                            <td>
+                                2026-06-30
+                                
+                            </td>
+                            <td>IELTS 6.0 or TOEFL iBT 79</td>
+                            <td>1 year full-time / 2 years part-time</td>
+                            <td>
+                                
+                                <a href="https://admissions.hkmu.edu.hk/pg/programmes/msc-environmental-science/" target="_blank" rel="noopener">Official Page ↗</a>
+                                
+                            </td>
+                        </tr>
+                        
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="uni-section" data-university="Lingnan University">
+            <div class="uni-header" onclick="toggleSection(this)">
+                <h2>
+                    <span class="toggle-icon">▼</span>
+                    Lingnan University
+                    
+                     (岭南大学)
+                    
+                </h2>
+                <span class="badge">1 programmes</span>
+            </div>
+            <div class="uni-body collapsible-content">
+                <table class="program-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Programme</th>
+                            <th>Degree</th>
+                            <th>Faculty</th>
+                            <th>Tuition</th>
+                            <th>Deadline</th>
+                            <th>English Req.</th>
+                            <th>Duration</th>
+                            <th>Link</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+                        <tr class="program-row">
+                            <td>1</td>
+                            <td>
+                                <strong>MSc in Marketing and International Business</strong>
+                                
+                            </td>
+                            <td><span class="tag">MSc</span></td>
+                            <td>Faculty of Business</td>
+                            <td>HKD 160,000</td>
+                            <td>
+                                2026-05-31
+                                
+                            </td>
+                            <td>IELTS 6.5 or TOEFL iBT 79</td>
+                            <td>1 year full-time</td>
+                            <td>
+                                
+                                <a href="https://www.ln.edu.hk/mkt/mscmib/" target="_blank" rel="noopener">Official Page ↗</a>
+                                
+                            </td>
+                        </tr>
+                        
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="uni-section" data-university="The Chinese University of Hong Kong">
+            <div class="uni-header" onclick="toggleSection(this)">
+                <h2>
+                    <span class="toggle-icon">▼</span>
+                    The Chinese University of Hong Kong
+                    
+                     (香港中文大学)
+                    
+                </h2>
+                <span class="badge">2 programmes</span>
+            </div>
+            <div class="uni-body collapsible-content">
+                <table class="program-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Programme</th>
+                            <th>Degree</th>
+                            <th>Faculty</th>
+                            <th>Tuition</th>
+                            <th>Deadline</th>
+                            <th>English Req.</th>
+                            <th>Duration</th>
+                            <th>Link</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+                        <tr class="program-row">
+                            <td>1</td>
+                            <td>
+                                <strong>MSc in Information Engineering</strong>
+                                
+                            </td>
+                            <td><span class="tag">MSc</span></td>
+                            <td>Faculty of Engineering</td>
+                            <td>HKD 210,000</td>
+                            <td>
+                                2026-02-28
+                                
+                            </td>
+                            <td>IELTS 6.5 or TOEFL iBT 79</td>
+                            <td>1 year full-time</td>
+                            <td>
+                                
+                                <a href="https://www.ie.cuhk.edu.hk/programmes/msc-in-information-engineering/" target="_blank" rel="noopener">Official Page ↗</a>
+                                
+                            </td>
+                        </tr>
+                        
+                        <tr class="program-row">
+                            <td>2</td>
+                            <td>
+                                <strong>Master of Accountancy</strong>
+                                
+                            </td>
+                            <td><span class="tag">MAcc</span></td>
+                            <td>CUHK Business School</td>
+                            <td>HKD 300,000</td>
+                            <td>
+                                2026-03-31
+                                
+                                <br><small>Round 1: Nov 2025; Round 2: Jan 2026; Round 3: Mar 2026</small>
+                                
+                            </td>
+                            <td>IELTS 6.5 or TOEFL iBT 79</td>
+                            <td>1 year full-time</td>
+                            <td>
+                                
+                                <a href="https://macc.cuhk.edu.hk" target="_blank" rel="noopener">Official Page ↗</a>
+                                
+                            </td>
+                        </tr>
+                        
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="uni-section" data-university="The Education University of Hong Kong">
+            <div class="uni-header" onclick="toggleSection(this)">
+                <h2>
+                    <span class="toggle-icon">▼</span>
+                    The Education University of Hong Kong
+                    
+                     (香港教育大学)
+                    
+                </h2>
+                <span class="badge">1 programmes</span>
+            </div>
+            <div class="uni-body collapsible-content">
+                <table class="program-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Programme</th>
+                            <th>Degree</th>
+                            <th>Faculty</th>
+                            <th>Tuition</th>
+                            <th>Deadline</th>
+                            <th>English Req.</th>
+                            <th>Duration</th>
+                            <th>Link</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+                        <tr class="program-row">
+                            <td>1</td>
+                            <td>
+                                <strong>Master of Education</strong>
+                                
+                            </td>
+                            <td><span class="tag">MEd</span></td>
+                            <td>Faculty of Education and Human Development</td>
+                            <td>HKD 126,000</td>
+                            <td>
+                                2026-03-01
+                                
+                            </td>
+                            <td>IELTS 6.0 or TOEFL iBT 80</td>
+                            <td>1 year full-time</td>
+                            <td>
+                                
+                                <a href="https://www.eduhk.hk/gradsch/index.php/postgraduate-programmes/master-of-education/" target="_blank" rel="noopener">Official Page ↗</a>
+                                
+                            </td>
+                        </tr>
+                        
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="uni-section" data-university="The Hong Kong Polytechnic University">
+            <div class="uni-header" onclick="toggleSection(this)">
+                <h2>
+                    <span class="toggle-icon">▼</span>
+                    The Hong Kong Polytechnic University
+                    
+                     (香港理工大学)
+                    
+                </h2>
+                <span class="badge">2 programmes</span>
+            </div>
+            <div class="uni-body collapsible-content">
+                <table class="program-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Programme</th>
+                            <th>Degree</th>
+                            <th>Faculty</th>
+                            <th>Tuition</th>
+                            <th>Deadline</th>
+                            <th>English Req.</th>
+                            <th>Duration</th>
+                            <th>Link</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+                        <tr class="program-row">
+                            <td>1</td>
+                            <td>
+                                <strong>MSc in Electrical Engineering</strong>
+                                
+                            </td>
+                            <td><span class="tag">MSc</span></td>
+                            <td>Faculty of Engineering</td>
+                            <td>HKD 171,000</td>
+                            <td>
+                                2026-04-30
+                                
+                            </td>
+                            <td>IELTS 6.0 or TOEFL iBT 80</td>
+                            <td>1.5 years full-time</td>
+                            <td>
+                                
+                                <a href="https://www.polyu.edu.hk/eee/study/taught-postgraduate-programmes/msc-ee/" target="_blank" rel="noopener">Official Page ↗</a>
+                                
+                            </td>
+                        </tr>
+                        
+                        <tr class="program-row">
+                            <td>2</td>
+                            <td>
+                                <strong>Master of Design</strong>
+                                
+                            </td>
+                            <td><span class="tag">MDes</span></td>
+                            <td>School of Design</td>
+                            <td>HKD 168,600</td>
+                            <td>
+                                2026-04-30
+                                
+                            </td>
+                            <td>IELTS 6.0 or TOEFL iBT 80</td>
+                            <td>1 year full-time</td>
+                            <td>
+                                
+                                <a href="https://www.sd.polyu.edu.hk/en/study/master-of-design" target="_blank" rel="noopener">Official Page ↗</a>
+                                
+                            </td>
+                        </tr>
+                        
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="uni-section" data-university="The Hong Kong University of Science and Technology">
+            <div class="uni-header" onclick="toggleSection(this)">
+                <h2>
+                    <span class="toggle-icon">▼</span>
+                    The Hong Kong University of Science and Technology
+                    
+                     (香港科技大学)
+                    
+                </h2>
+                <span class="badge">2 programmes</span>
+            </div>
+            <div class="uni-body collapsible-content">
+                <table class="program-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Programme</th>
+                            <th>Degree</th>
+                            <th>Faculty</th>
+                            <th>Tuition</th>
+                            <th>Deadline</th>
+                            <th>English Req.</th>
+                            <th>Duration</th>
+                            <th>Link</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+                        <tr class="program-row">
+                            <td>1</td>
+                            <td>
+                                <strong>MSc in Big Data Technology</strong>
+                                
+                            </td>
+                            <td><span class="tag">MSc</span></td>
+                            <td>School of Engineering</td>
+                            <td>HKD 250,000</td>
+                            <td>
+                                2026-03-01
+                                
+                            </td>
+                            <td>IELTS 6.5 (no sub-score below 5.5) or TOEFL iBT 80</td>
+                            <td>1 year full-time</td>
+                            <td>
+                                
+                                <a href="https://pg.ust.hk/prospective-students/programs/msc-bdt" target="_blank" rel="noopener">Official Page ↗</a>
+                                
+                            </td>
+                        </tr>
+                        
+                        <tr class="program-row">
+                            <td>2</td>
+                            <td>
+                                <strong>MBA Program</strong>
+                                
+                            </td>
+                            <td><span class="tag">MBA</span></td>
+                            <td>School of Business and Management</td>
+                            <td>HKD 600,000</td>
+                            <td>
+                                2026-03-31
+                                
+                                <br><small>R1: Oct 2025; R2: Jan 2026; R3: Mar 2026</small>
+                                
+                            </td>
+                            <td>IELTS 6.5 or TOEFL iBT 80; GMAT/GRE required</td>
+                            <td>16 months full-time</td>
+                            <td>
+                                
+                                <a href="https://mba.hkust.edu.hk" target="_blank" rel="noopener">Official Page ↗</a>
+                                
+                            </td>
+                        </tr>
+                        
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="uni-section" data-university="The University of Hong Kong">
+            <div class="uni-header" onclick="toggleSection(this)">
+                <h2>
+                    <span class="toggle-icon">▼</span>
+                    The University of Hong Kong
+                    
+                     (香港大学)
+                    
+                </h2>
+                <span class="badge">3 programmes</span>
+            </div>
+            <div class="uni-body collapsible-content">
+                <table class="program-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Programme</th>
+                            <th>Degree</th>
+                            <th>Faculty</th>
+                            <th>Tuition</th>
+                            <th>Deadline</th>
+                            <th>English Req.</th>
+                            <th>Duration</th>
+                            <th>Link</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+                        <tr class="program-row">
+                            <td>1</td>
+                            <td>
+                                <strong>Master of Science in Business Analytics</strong>
+                                <br><small>商业分析理学硕士</small>
+                            </td>
+                            <td><span class="tag">MSc</span></td>
+                            <td>Faculty of Business and Economics</td>
+                            <td>HKD 330,000</td>
+                            <td>
+                                2026-04-14
+                                
+                                <br><small>Early round: Jan 13, 2026; Main round: Apr 14, 2026</small>
+                                
+                            </td>
+                            <td>IELTS 6.5 (no sub-score below 5.5) or TOEFL iBT 80</td>
+                            <td>1 year full-time</td>
+                            <td>
+                                
+                                <a href="https://admissions.hku.hk/tpg/programme/master-of-science-in-business-analytics" target="_blank" rel="noopener">Official Page ↗</a>
+                                
+                            </td>
+                        </tr>
+                        
+                        <tr class="program-row">
+                            <td>2</td>
+                            <td>
+                                <strong>Master of Science in Computer Science</strong>
+                                <br><small>计算机科学理学硕士</small>
+                            </td>
+                            <td><span class="tag">MSc</span></td>
+                            <td>Faculty of Engineering</td>
+                            <td>HKD 210,000</td>
+                            <td>
+                                2026-01-13
+                                
+                            </td>
+                            <td>IELTS 6.0 (no sub-score below 5.5) or TOEFL iBT 80</td>
+                            <td>1 year full-time / 2 years part-time</td>
+                            <td>
+                                
+                                <a href="https://admissions.hku.hk/tpg/programme/master-of-science-in-computer-science" target="_blank" rel="noopener">Official Page ↗</a>
+                                
+                            </td>
+                        </tr>
+                        
+                        <tr class="program-row">
+                            <td>3</td>
+                            <td>
+                                <strong>Master of Laws (LLM)</strong>
+                                
+                            </td>
+                            <td><span class="tag">LLM</span></td>
+                            <td>Faculty of Law</td>
+                            <td>HKD 178,200</td>
+                            <td>
+                                2026-02-28
+                                
+                            </td>
+                            <td>IELTS 7.0 (no sub-score below 6.5) or TOEFL iBT 97</td>
+                            <td>1 year full-time</td>
+                            <td>
+                                
+                                <a href="https://www.law.hku.hk/postgraduate/llm/" target="_blank" rel="noopener">Official Page ↗</a>
+                                
+                            </td>
+                        </tr>
+                        
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+
+        <footer>
+            <p><strong>Disclaimer:</strong> All information is collected from official university websites.
+            Please verify with the respective university's official website for the most up-to-date information.</p>
+            <p style="margin-top: 8px;">© 2026 HK Admissions Collector</p>
+        </footer>
+    </div>
+
+    <script>
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('input', function() {
+            const query = this.value.toLowerCase();
+            document.querySelectorAll('.program-row').forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(query) ? '' : 'none';
+            });
+            // Show/hide university sections based on visible rows
+            document.querySelectorAll('.uni-section').forEach(section => {
+                const visibleRows = section.querySelectorAll('.program-row[style=""],.program-row:not([style])');
+                let hasVisible = false;
+                visibleRows.forEach(r => { if (r.style.display !== 'none') hasVisible = true; });
+                section.style.display = hasVisible ? '' : 'none';
+            });
+        });
+
+        // University filter
+        function filterByUni() {
+            const selected = document.getElementById('uniFilter').value;
+            document.querySelectorAll('.uni-section').forEach(section => {
+                if (!selected || section.dataset.university === selected) {
+                    section.style.display = '';
+                } else {
+                    section.style.display = 'none';
+                }
+            });
+        }
+
+        // Toggle section
+        function toggleSection(header) {
+            header.parentElement.classList.toggle('collapsed');
+        }
+    </script>
+</body>
+</html>
