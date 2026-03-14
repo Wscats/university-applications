@@ -1,3 +1,27 @@
+---
+name: hk-university-admissions
+description: >
+  采集香港所有大学（含公立及私立共22所院校）的官方硕士项目招生信息，
+  包括学费、申请时间、截止日期、英语要求、项目详情及官方链接，
+  并输出为 Excel、Word、PDF、HTML 和 Markdown 五种格式。
+  仅使用大学官方数据源，严禁任何第三方信息。
+version: 1.0.0
+type: prompt-based
+implementation: pure-markdown
+interface: natural-language
+languages:
+  - zh-CN
+  - en
+tags:
+  - hong-kong
+  - university
+  - master-admissions
+  - data-collection
+  - multi-format-export
+author: user
+license: MIT
+---
+
 # 🎓 Skill: 香港大学硕士招生信息采集
 
 > **Skill Name**: `hk-university-admissions`
@@ -5,7 +29,6 @@
 > **Type**: Prompt-based Data Collection & Formatting
 > **Implementation**: Pure Markdown — No code, no dependencies
 > **Interface**: Natural Language (中文 / English)
-
 ---
 
 ## 1. Skill 概述
