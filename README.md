@@ -75,49 +75,51 @@ The skill recognizes universities by multiple names:
 ## Skill Structure
 
 ```
-skill/
-├── skill.md                           # ⭐ Skill entry point (all-in-one definition)
+./
+├── SKILL.md                           # ⭐ Skill entry point (all-in-one definition)
+├── SKILL-SPEC.md                      # Skill specification & rules
 ├── README.md                          # This file - Entry point & usage guide
 ├── README-CN.md                       # Chinese usage guide (中文版)
-├── SKILL-SPEC.md                      # Skill specification & rules
-├── DATA-SCHEMA.md                     # Data structure definition
-├── COLLECTION-PROMPT.md               # Master prompt for data collection
-├── universities/                      # Per-university collection prompts
-│   ├── 01-hku.md                      # The University of Hong Kong
-│   ├── 02-cuhk.md                     # Chinese University of Hong Kong
-│   ├── 03-hkust.md                    # HK University of Science & Technology
-│   ├── 04-polyu.md                    # Hong Kong Polytechnic University
-│   ├── 05-cityu.md                    # City University of Hong Kong
-│   ├── 06-hkbu.md                     # Hong Kong Baptist University
-│   ├── 07-lingu.md                    # Lingnan University
-│   ├── 08-eduhk.md                    # Education University of Hong Kong
-│   ├── 09-hkmu.md                     # Hong Kong Metropolitan University
-│   ├── 10-hksyu.md                    # Hong Kong Shue Yan University
-│   ├── 11-hsuhk.md                    # Hang Seng University of Hong Kong
-│   ├── 12-sfu.md                      # Saint Francis University (formerly Chu Hai)
-│   ├── 13-hkapa.md                    # HK Academy for Performing Arts
-│   ├── 14-twc.md                      # Tung Wah College
-│   ├── 15-nyc.md                      # Hong Kong Nang Yan College
-│   ├── 16-thei.md                     # Technological & Higher Education Inst.
-│   ├── 17-chuhai-redirect.md          # Redirect → 12-sfu.md
-│   ├── 18-ouhk-redirect.md            # Redirect → 09-hkmu.md
-│   ├── 19-gcc.md                      # Gratia Christian College
-│   ├── 20-cihe.md                     # Caritas Institute of Higher Education
-│   ├── 21-hkct.md                     # Hong Kong College of Technology
-│   ├── 22-uowchk.md                   # UOW College Hong Kong
-│   └── 23-vtc.md                      # Vocational Training Council
-├── output-templates/                  # Output format templates
-│   ├── excel-template.md              # CSV/Excel output template
-│   ├── word-template.md               # Word document output template
-│   ├── pdf-template.md                # PDF output template
-│   ├── html-template.md               # HTML webpage output template
-│   └── markdown-template.md           # Markdown output template
-├── workflows/                         # Workflow orchestration
-│   ├── full-collection.md             # Full collection workflow
-│   ├── single-university.md           # Single university workflow
-│   └── format-conversion.md           # Format conversion workflow
-└── examples/                          # Example outputs
-    └── sample-output.md               # Sample of expected output
+├── skill/
+│   ├── SKILL-SPEC.md                  # Skill specification & rules (copy)
+│   ├── DATA-SCHEMA.md                     # Data structure definition
+│   ├── COLLECTION-PROMPT.md               # Master prompt for data collection
+│   ├── universities/                      # Per-university collection prompts
+│   │   ├── 01-hku.md                      # The University of Hong Kong
+│   │   ├── 02-cuhk.md                     # Chinese University of Hong Kong
+│   │   ├── 03-hkust.md                    # HK University of Science & Technology
+│   │   ├── 04-polyu.md                    # Hong Kong Polytechnic University
+│   │   ├── 05-cityu.md                    # City University of Hong Kong
+│   │   ├── 06-hkbu.md                     # Hong Kong Baptist University
+│   │   ├── 07-lingu.md                    # Lingnan University
+│   │   ├── 08-eduhk.md                    # Education University of Hong Kong
+│   │   ├── 09-hkmu.md                     # Hong Kong Metropolitan University
+│   │   ├── 10-hksyu.md                    # Hong Kong Shue Yan University
+│   │   ├── 11-hsuhk.md                    # Hang Seng University of Hong Kong
+│   │   ├── 12-sfu.md                      # Saint Francis University (formerly Chu Hai)
+│   │   ├── 13-hkapa.md                    # HK Academy for Performing Arts
+│   │   ├── 14-twc.md                      # Tung Wah College
+│   │   ├── 15-nyc.md                      # Hong Kong Nang Yan College
+│   │   ├── 16-thei.md                     # Technological & Higher Education Inst.
+│   │   ├── 17-chuhai-redirect.md          # Redirect → 12-sfu.md
+│   │   ├── 18-ouhk-redirect.md            # Redirect → 09-hkmu.md
+│   │   ├── 19-gcc.md                      # Gratia Christian College
+│   │   ├── 20-cihe.md                     # Caritas Institute of Higher Education
+│   │   ├── 21-hkct.md                     # Hong Kong College of Technology
+│   │   ├── 22-uowchk.md                   # UOW College Hong Kong
+│   │   └── 23-vtc.md                      # Vocational Training Council
+│   ├── output-templates/                  # Output format templates
+│   │   ├── excel-template.md              # CSV/Excel output template
+│   │   ├── word-template.md               # Word document output template
+│   │   ├── pdf-template.md                # PDF output template
+│   │   ├── html-template.md               # HTML webpage output template
+│   │   └── markdown-template.md           # Markdown output template
+│   ├── workflows/                         # Workflow orchestration
+│   │   ├── full-collection.md             # Full collection workflow
+│   │   ├── single-university.md           # Single university workflow
+│   │   └── format-conversion.md           # Format conversion workflow
+│   └── examples/                          # Example outputs
+│       └── sample-output.md               # Sample of expected output
 ```
 
 ## Covered Universities & Institutions (22 Total)

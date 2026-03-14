@@ -437,10 +437,10 @@ Step 4: 多格式输出顺序（生成全部时）
 /                                      ← 项目根目录
 ├── SKILL.md                           ← 本文件（Skill 入口 & 完整定义）
 ├── SKILL-SPEC.md                      ← 技能规范定义
+├── README.md                          ← English usage guide
+├── README-CN.md                       ← 中文使用指南
 │
 └── skill/                             # Skill 实现目录
-    ├── README.md                      # English usage guide
-    ├── README-CN.md                   # 中文使用指南
     ├── SKILL-SPEC.md                  # 规范定义（详细版，同根目录）
     ├── DATA-SCHEMA.md                 # 数据结构定义（详细版）
     ├── COLLECTION-PROMPT.md           # 主采集 Prompt
@@ -519,4 +519,4 @@ Step 4: 多格式输出顺序（生成全部时）
 
 ---
 
-> 📖 详细英文说明: [README.md](skill/README.md) | 📖 详细中文说明: [README-CN.md](skill/README-CN.md)
+> 📖 详细英文说明: [README.md](README.md) | 📖 详细中文说明: [README-CN.md](README-CN.md)

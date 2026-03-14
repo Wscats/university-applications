@@ -73,49 +73,51 @@ Skill 支持多种名称识别方式，中英文均可：
 ## Skill 文件结构
 
 ```
-skill/
-├── skill.md                           # ⭐ Skill 入口文件（一体化定义）
+./
+├── SKILL.md                           # ⭐ Skill 入口文件（一体化定义）
+├── SKILL-SPEC.md                      # 规范定义 - 规则与约束
 ├── README.md                          # 英文入口 - 使用指南
 ├── README-CN.md                       # 本文件 - 中文使用指南
-├── SKILL-SPEC.md                      # 规范定义 - 规则与约束
-├── DATA-SCHEMA.md                     # 数据结构 - 字段定义与格式标准
-├── COLLECTION-PROMPT.md               # 主采集 Prompt - 数据收集工作流
-├── universities/                      # 22 所院校独立采集模板
-│   ├── 01-hku.md                      # 香港大学
-│   ├── 02-cuhk.md                     # 香港中文大学
-│   ├── 03-hkust.md                    # 香港科技大学
-│   ├── 04-polyu.md                    # 香港理工大学
-│   ├── 05-cityu.md                    # 香港城市大学
-│   ├── 06-hkbu.md                     # 香港浸会大学
-│   ├── 07-lingu.md                    # 岭南大学
-│   ├── 08-eduhk.md                    # 香港教育大学
-│   ├── 09-hkmu.md                     # 香港都会大学（原公开大学）
-│   ├── 10-hksyu.md                    # 香港树仁大学
-│   ├── 11-hsuhk.md                    # 香港恒生大学
-│   ├── 12-sfu.md                      # 圣方济各大学（原珠海学院）
-│   ├── 13-hkapa.md                    # 香港演艺学院
-│   ├── 14-twc.md                      # 东华学院
-│   ├── 15-nyc.md                      # 香港能仁专上学院
-│   ├── 16-thei.md                     # 香港高等教育科技学院
-│   ├── 17-chuhai-redirect.md          # 珠海学院重定向 → 12-sfu.md
-│   ├── 18-ouhk-redirect.md            # 公开大学重定向 → 09-hkmu.md
-│   ├── 19-gcc.md                      # 宏恩基督教学院
-│   ├── 20-cihe.md                     # 明爱专上学院
-│   ├── 21-hkct.md                     # 港专学院
-│   ├── 22-uowchk.md                   # 香港伍伦贡学院
-│   └── 23-vtc.md                      # 职业训练局
-├── output-templates/                  # 5 种输出格式模板
-│   ├── excel-template.md              # Excel/CSV 输出模板
-│   ├── word-template.md               # Word 文档输出模板
-│   ├── pdf-template.md                # PDF 输出模板
-│   ├── html-template.md               # HTML 网页输出模板
-│   └── markdown-template.md           # Markdown 输出模板
-├── workflows/                         # 工作流编排
-│   ├── full-collection.md             # 全量采集工作流
-│   ├── single-university.md           # 单校采集工作流
-│   └── format-conversion.md           # 格式转换工作流
-└── examples/                          # 输出示例
-    └── sample-output.md               # 预期输出样本
+├── skill/
+│   ├── SKILL-SPEC.md                  # 规范定义（副本）
+│   ├── DATA-SCHEMA.md                 # 数据结构 - 字段定义与格式标准
+│   ├── COLLECTION-PROMPT.md           # 主采集 Prompt - 数据收集工作流
+│   ├── universities/                  # 22 所院校独立采集模板
+│   │   ├── 01-hku.md                  # 香港大学
+│   │   ├── 02-cuhk.md                 # 香港中文大学
+│   │   ├── 03-hkust.md                # 香港科技大学
+│   │   ├── 04-polyu.md                # 香港理工大学
+│   │   ├── 05-cityu.md                # 香港城市大学
+│   │   ├── 06-hkbu.md                 # 香港浸会大学
+│   │   ├── 07-lingu.md                # 岭南大学
+│   │   ├── 08-eduhk.md                # 香港教育大学
+│   │   ├── 09-hkmu.md                 # 香港都会大学（原公开大学）
+│   │   ├── 10-hksyu.md                # 香港树仁大学
+│   │   ├── 11-hsuhk.md                # 香港恒生大学
+│   │   ├── 12-sfu.md                  # 圣方济各大学（原珠海学院）
+│   │   ├── 13-hkapa.md                # 香港演艺学院
+│   │   ├── 14-twc.md                  # 东华学院
+│   │   ├── 15-nyc.md                  # 香港能仁专上学院
+│   │   ├── 16-thei.md                 # 香港高等教育科技学院
+│   │   ├── 17-chuhai-redirect.md      # 珠海学院重定向 → 12-sfu.md
+│   │   ├── 18-ouhk-redirect.md        # 公开大学重定向 → 09-hkmu.md
+│   │   ├── 19-gcc.md                  # 宏恩基督教学院
+│   │   ├── 20-cihe.md                 # 明爱专上学院
+│   │   ├── 21-hkct.md                 # 港专学院
+│   │   ├── 22-uowchk.md              # 香港伍伦贡学院
+│   │   └── 23-vtc.md                  # 职业训练局
+│   ├── output-templates/              # 5 种输出格式模板
+│   │   ├── excel-template.md          # Excel/CSV 输出模板
+│   │   ├── word-template.md           # Word 文档输出模板
+│   │   ├── pdf-template.md            # PDF 输出模板
+│   │   ├── html-template.md           # HTML 网页输出模板
+│   │   └── markdown-template.md       # Markdown 输出模板
+│   ├── workflows/                     # 工作流编排
+│   │   ├── full-collection.md         # 全量采集工作流
+│   │   ├── single-university.md       # 单校采集工作流
+│   │   └── format-conversion.md       # 格式转换工作流
+│   └── examples/                      # 输出示例
+│       └── sample-output.md           # 预期输出样本
 ```
 
 ## 覆盖院校（共 22 所）
