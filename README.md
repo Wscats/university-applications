@@ -231,4 +231,8 @@ Step 4: 交付     → 呈现格式化结果
 
 ---
 
+## 📄 许可证
+
+本项目采用 [MIT License](LICENSE) 开源许可证。
+
 > 📖 English version: [README.md](README.md)

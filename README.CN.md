@@ -188,4 +188,8 @@ For each master's program, the following fields are collected:
 
 ---
 
+## 📄 License
+
+This project is licensed under the [MIT License](LICENSE).
+
 > 📖 中文版: [README-CN.md](README-CN.md)
