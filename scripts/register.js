@@ -246,7 +246,7 @@ function createProfile(userId, name, gender, birthDate, birthTime, birthPlace, s
       pushEvening: false,
       morningTime: '07:00',
       eveningTime: '20:00',
-      channels: ['telegram'],
+      channels: ['openclaw'],
       focusAreas: ['事业', '财运', '健康'],
       riskTolerance: '中等'
     },
@@ -291,7 +291,7 @@ if (args.length < 5) {
   node register.js <userId> <姓名> <性别> <出生日期> <出生时间> [出生地点] [子时]
 
 参数:
-  userId      - 用户ID（telegram id或其他唯一标识）
+  userId      - 用户ID（唯一标识）
   姓名        - 用户姓名
   性别        - 男 或 女
   出生日期    - YYYY-MM-DD
@@ -381,7 +381,7 @@ console.log('');
 // 自动开启推送（如果指定了 --push 参数）
 const pushIdx = args.indexOf('--push');
 if (pushIdx !== -1) {
-  const channel = args[args.indexOf('--channel') + 1] || 'telegram';
+  const channel = args[args.indexOf('--channel') + 1] || 'openclaw';
   const morning = args[args.indexOf('--morning') + 1] || '08:00';
   const evening = args[args.indexOf('--evening') + 1] || '20:00';
   console.log('⏳ 正在开启每日推送...');

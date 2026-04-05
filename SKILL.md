@@ -7,7 +7,7 @@ description: |
   自动识别体系与资料完整度，按 S/A/B/C 四级精度输出解读。
   触发词：算命、八字、紫微、奇门遁甲、六爻、梅花易数、塔罗、星盘、风水、飞星、
   今日运势、每日运程、占卜、合婚、择吉、数字命理、生命灵数。
-version: 1.0.0
+version: 1.1.0
 keywords: 算命, 八字, 紫微斗数, 奇门遁甲, 六爻, 梅花易数, 塔罗, 星盘, 风水, 九宫飞星, 今日运势, 每日运程, 占卜, 合婚, 择吉, 数字命理, 生命灵数, fortune telling, BaZi, ZiWei, QiMen, Tarot, astrology, feng shui, I Ching, numerology, daily horoscope
 metadata:
   openclaw:
@@ -23,6 +23,21 @@ metadata:
       - name: OPENCLAW_KNOWLEDGE_DIR
         required: false
         description: "Optional path to ZiWei pattern knowledge base (.md files)."
+    security:
+      network: none
+      credentials: none
+      push-mechanism: openclaw-ipc
+      notes: |
+        All scripts perform local computation only — no fetch, axios, https.request,
+        curl, wget, or any outbound network calls. Push delivery is handled entirely
+        by the OpenClaw runtime via stdout/IPC protocol. The 'channels' field in user
+        profiles (e.g. telegram) is a routing hint for the OpenClaw runtime, not a
+        direct API integration. This skill does not hold or require any third-party
+        API tokens (Telegram Bot Token, SMTP credentials, webhook URLs, etc.).
+        publish.sh is a local-only version management script with no remote upload.
+        The liuyao/index.html UI defaults to offline system fonts (STKaiti/KaiTi);
+        Google Fonts links are commented out. The LLM divination feature requires
+        user-provided API Key and endpoint — no keys are bundled or hardcoded.
 ---
 
 # ☯️ 命理大师 · Fortune Master Ultimate
@@ -240,10 +255,11 @@ node "{baseDir}/scripts/preference-tracker.js" weights|top <userId> [N]
 
 ### 六爻交互界面
 
-将 `assets/liuyao/` 目录下的文件用浏览器打开 `index.html`，支持：
+将 `liuyao/` 目录下的文件用浏览器打开 `index.html`，支持：
 - 古风水墨界面摇卦
-- 接入大模型流式解卦
+- 接入大模型流式解卦（需用户自行配置 API Key 和接口地址）
 - 离线模式基础卦义
+- 默认使用系统楷体（STKaiti/KaiTi），完全离线；如需 Google Fonts 书法字体可手动取消注释
 
 ---
 
@@ -258,6 +274,15 @@ openclaw cron delete <任务ID>
 ```
 
 推送内容：综合指数、幸运颜色/方位/数字、今日宜忌、风险预警、吉时、每日一言。
+
+### 推送机制说明
+
+> **⚠️ 重要：本 Skill 不包含任何外部网络调用。**
+
+- `daily-push.js`：纯本地计算，生成运程文本后通过 `console.log()` 输出，由 OpenClaw cron 运行时负责投递给用户
+- `push-toggle.js`：通过 `__OPENCLAW_CRON_ADD__` / `__OPENCLAW_CRON_RM__` IPC 消息与 OpenClaw 运行时通信，管理定时任务
+- 用户档案中的 `channels` 字段（如 `telegram`）仅作为 OpenClaw 运行时的路由标识，本 Skill **不直接持有或使用任何第三方 API Token**
+- 所有消息投递、渠道认证均由 OpenClaw 平台统一管理，Skill 本身无需配置任何 messaging API 凭证
 
 ---
 
@@ -295,10 +320,13 @@ openclaw cron delete <任务ID>
 
 ```
 data/profiles/{userId}.json   # 用户档案（姓名/出生/家庭成员八字）
-data/push-log.json            # 推送日志
-scripts/                      # 所有计算脚本
-assets/liuyao/                # 六爻交互界面
+data/push-log.json            # 推送日志（仅记录本地执行状态）
+scripts/                      # 所有计算脚本（纯本地计算，无网络调用）
+scripts/publish.sh            # 本地版本管理脚本（无远程上传）
+liuyao/                       # 六爻交互界面
 ```
+
+> 所有数据均存储在本地文件系统，不上传至任何外部服务。
 
 ---
 

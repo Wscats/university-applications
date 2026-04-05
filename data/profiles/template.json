@@ -33,7 +33,7 @@
     "pushEvening": false,
     "morningTime": "07:00",
     "eveningTime": "20:00",
-    "channels": ["telegram"],
+    "channels": ["openclaw"],
     "focusAreas": ["事业", "财运", "健康"],
     "riskTolerance": "中等"
   },

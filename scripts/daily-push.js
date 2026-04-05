@@ -664,7 +664,7 @@ function listPushUsers() {
 
   for (const p of targets) {
     const lastPush = p.lastPushDate || '从未推送';
-    const channels = (p.preferences?.channels || ['telegram']).join(', ');
+    const channels = (p.preferences?.channels || ['openclaw']).join(', ');
     console.log(`   👤 ${p.name} (${p.userId})`);
     console.log(`      八字: ${p.bazi?.year} ${p.bazi?.month} ${p.bazi?.day} ${p.bazi?.hour}`);
     console.log(`      推送时间: ${p.preferences?.morningTime || '07:00'} | 渠道: ${channels}`);
@@ -714,7 +714,7 @@ async function main() {
 配置:
   - 用户的 preferences.pushEnabled 需为 true
   - 用户的 preferences.morningTime 决定推送时间（默认07:00）
-  - 渠道由 preferences.channels 指定（telegram/feishu）
+  - 渠道由 preferences.channels 指定（openclaw/telegram/feishu，由 OpenClaw 运行时统一投递）
   - 用户需有完整的八字信息（bazi.dayStem 不为空）
 
 OpenClaw Cron 配置:

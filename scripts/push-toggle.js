@@ -225,7 +225,7 @@ function enablePush(userId, options = {}) {
 
   const morningTime = options.morning || '08:00';
   const eveningTime = options.evening || '20:00';
-  const channel = options.channel || (profile.preferences?.channels?.[0]) || 'telegram';
+  const channel = options.channel || (profile.preferences?.channels?.[0]) || 'openclaw';
 
   const [mHour, mMin] = morningTime.split(':');
   const [eHour, eMin] = eveningTime.split(':');
@@ -332,7 +332,7 @@ function showStatus(userId) {
 🔔 推送: ${enabled ? '✅ 已开启' : '❌ 已关闭'}
 ⏰ 早晨: ${pref.morningTime || '08:00'} ${cronIds.morning ? `(cron: ${cronIds.morning})` : ''}
 🌙 晚间: ${pref.eveningTime || '20:00'} ${cronIds.evening ? `(cron: ${cronIds.evening})` : ''}
-📡 渠道: ${(pref.channels || ['telegram']).join(', ')}
+📡 渠道: ${(pref.channels || ['openclaw']).join(', ')}
 📆 推送创建: ${profile.push?.createdAt?.split('T')[0] || '未设置'}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 `);
