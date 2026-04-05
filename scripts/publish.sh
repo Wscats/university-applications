@@ -1,11 +1,19 @@
 #!/usr/bin/env bash
 # ============================================================
-# publish.sh — ClawHub Skill Publish Script
-# Usage:
-#   ./scripts/publish.sh --version <semver> [name=<display_name>]
+# publish.sh — ClawHub Skill Auto-Publish Script
 #
-# Equivalent to:
-#   clawhub publish <dir> --version <semver> name=<display_name>
+# Features:
+#   - Auto version bump (patch/minor/major) from current version
+#   - Timeout retry with configurable attempts
+#   - Syncs version across _meta.json, package.json, SKILL.md
+#   - Calls `clawhub publish` with correct CLI arguments
+#
+# Usage:
+#   ./scripts/publish.sh                          # auto bump patch
+#   ./scripts/publish.sh --bump minor             # bump minor
+#   ./scripts/publish.sh --version 2.0.0          # explicit version
+#   ./scripts/publish.sh --name 命理大师           # with display name
+#   ./scripts/publish.sh --retries 5 --timeout 120
 # ============================================================
 
 set -euo pipefail
@@ -22,10 +30,18 @@ NC='\033[0m' # No Color
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 VERSION=""
+BUMP="patch"          # patch | minor | major
 DISPLAY_NAME=""
 DRY_RUN=false
 SKIP_GIT=false
 SKIP_CHECKS=false
+MAX_RETRIES=3         # max publish retry attempts
+RETRY_DELAY=5         # seconds between retries
+TIMEOUT=60            # timeout per publish attempt (seconds)
+SLUG=""               # optional --slug override
+CHANGELOG=""          # optional --changelog text
+FORK_OF=""            # optional --fork-of
+TAGS=""               # optional --tags
 
 # ── Helper Functions ─────────────────────────────────────────
 info()    { echo -e "${CYAN}ℹ${NC}  $*"; }
@@ -44,23 +60,89 @@ banner() {
 
 usage() {
   cat <<EOF
-Usage: $(basename "$0") [OPTIONS] [KEY=VALUE ...]
+Usage: $(basename "$0") [OPTIONS]
 
-Options:
-  --version <semver>   Version to publish (required, e.g. 1.0.1)
-  --dry-run            Simulate publish without making changes
-  --skip-git           Skip git tag and commit
+Version Options (mutually exclusive):
+  --version <semver>   Explicit version to publish (e.g. 2.0.0)
+  --bump <level>       Auto bump: patch (default), minor, or major
+
+Publish Options:
+  --name <name>        Display name (e.g. --name 命理大师)
+  --slug <slug>        Skill slug override
+  --changelog <text>   Changelog text
+  --fork-of <slug>     Mark as fork of existing skill
+  --tags <tags>        Comma-separated tags (default: "latest")
+
+Retry Options:
+  --retries <n>        Max publish retry attempts (default: 3)
+  --timeout <sec>      Timeout per attempt in seconds (default: 60)
+  --retry-delay <sec>  Delay between retries in seconds (default: 5)
+
+Other Options:
+  --dry-run            Simulate without making changes
+  --skip-git           Skip git commit and tag
   --skip-checks        Skip pre-flight checks
   -h, --help           Show this help message
 
-Key-Value Pairs:
-  name=<display_name>  Display name for the skill (e.g. name=命理大师)
-
 Examples:
-  $(basename "$0") --version 1.0.1 name=命理大师
-  $(basename "$0") --version 1.0.1 --dry-run
+  $(basename "$0")                                  # auto bump patch, publish
+  $(basename "$0") --bump minor --name 命理大师      # bump minor version
+  $(basename "$0") --version 2.0.0 --name 命理大师   # explicit version
+  $(basename "$0") --retries 5 --timeout 120        # more retries, longer timeout
 EOF
   exit 0
+}
+
+# ── Semver Bump Function ─────────────────────────────────────
+# Usage: bump_version "1.2.3" "patch" => "1.2.4"
+#        bump_version "1.2.3" "minor" => "1.3.0"
+#        bump_version "1.2.3" "major" => "2.0.0"
+bump_version() {
+  local ver="$1"
+  local level="$2"
+
+  # Strip leading 'v' if present
+  ver="${ver#v}"
+
+  # Extract major.minor.patch (strip any pre-release suffix)
+  local base="${ver%%-*}"
+  IFS='.' read -r major minor patch <<< "$base"
+
+  # Default to 0 if empty
+  major="${major:-0}"
+  minor="${minor:-0}"
+  patch="${patch:-0}"
+
+  case "$level" in
+    major)
+      major=$((major + 1))
+      minor=0
+      patch=0
+      ;;
+    minor)
+      minor=$((minor + 1))
+      patch=0
+      ;;
+    patch)
+      patch=$((patch + 1))
+      ;;
+    *)
+      fatal "Invalid bump level: '$level' (expected: patch, minor, major)"
+      ;;
+  esac
+
+  echo "${major}.${minor}.${patch}"
+}
+
+# ── Read Current Version ─────────────────────────────────────
+read_current_version() {
+  if [[ -f "$PROJECT_DIR/_meta.json" ]]; then
+    python3 -c "import json; print(json.load(open('$PROJECT_DIR/_meta.json')).get('version', '0.0.0'))" 2>/dev/null || echo "0.0.0"
+  elif [[ -f "$PROJECT_DIR/package.json" ]]; then
+    python3 -c "import json; print(json.load(open('$PROJECT_DIR/package.json')).get('version', '0.0.0'))" 2>/dev/null || echo "0.0.0"
+  else
+    echo "0.0.0"
+  fi
 }
 
 # ── Parse Arguments ──────────────────────────────────────────
@@ -68,6 +150,42 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --version)
       VERSION="$2"
+      shift 2
+      ;;
+    --bump)
+      BUMP="$2"
+      shift 2
+      ;;
+    --name)
+      DISPLAY_NAME="$2"
+      shift 2
+      ;;
+    --slug)
+      SLUG="$2"
+      shift 2
+      ;;
+    --changelog)
+      CHANGELOG="$2"
+      shift 2
+      ;;
+    --fork-of)
+      FORK_OF="$2"
+      shift 2
+      ;;
+    --tags)
+      TAGS="$2"
+      shift 2
+      ;;
+    --retries)
+      MAX_RETRIES="$2"
+      shift 2
+      ;;
+    --timeout)
+      TIMEOUT="$2"
+      shift 2
+      ;;
+    --retry-delay)
+      RETRY_DELAY="$2"
       shift 2
       ;;
     --dry-run)
@@ -85,15 +203,6 @@ while [[ $# -gt 0 ]]; do
     -h|--help)
       usage
       ;;
-    *=*)
-      KEY="${1%%=*}"
-      VALUE="${1#*=}"
-      case "$KEY" in
-        name) DISPLAY_NAME="$VALUE" ;;
-        *)    warn "Unknown key-value pair: $1" ;;
-      esac
-      shift
-      ;;
     *)
       warn "Unknown argument: $1"
       shift
@@ -101,23 +210,30 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-# ── Validate ─────────────────────────────────────────────────
+# ── Resolve Version ─────────────────────────────────────────
 banner
 
+CURRENT_VERSION=$(read_current_version)
+
 if [[ -z "$VERSION" ]]; then
-  fatal "Missing required argument: --version <semver>"
+  # Auto bump from current version
+  VERSION=$(bump_version "$CURRENT_VERSION" "$BUMP")
+  info "Auto bump: v${CURRENT_VERSION} → v${VERSION} (${BUMP})"
+else
+  # Validate explicit semver format
+  if ! echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$'; then
+    fatal "Invalid version format: '$VERSION' (expected semver, e.g. 1.0.1)"
+  fi
+  info "Explicit version: v${CURRENT_VERSION} → v${VERSION}"
 fi
 
-# Validate semver format
-if ! echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$'; then
-  fatal "Invalid version format: '$VERSION' (expected semver, e.g. 1.0.1)"
-fi
-
+echo ""
 info "Project directory: ${BOLD}$PROJECT_DIR${NC}"
 info "Target version:    ${BOLD}v$VERSION${NC}"
 if [[ -n "$DISPLAY_NAME" ]]; then
   info "Display name:      ${BOLD}$DISPLAY_NAME${NC}"
 fi
+info "Retry config:      ${BOLD}${MAX_RETRIES} attempts, ${TIMEOUT}s timeout, ${RETRY_DELAY}s delay${NC}"
 if $DRY_RUN; then
   warn "DRY RUN mode — no files will be modified"
 fi
@@ -127,7 +243,15 @@ echo ""
 if ! $SKIP_CHECKS; then
   info "Running pre-flight checks..."
 
-  # 1. Check required files exist
+  # 1. Check clawhub CLI
+  if command -v clawhub &>/dev/null; then
+    CLAWHUB_VER=$(clawhub --version 2>/dev/null || echo "unknown")
+    success "clawhub CLI available ($CLAWHUB_VER)"
+  else
+    fatal "clawhub CLI not found. Install it first: npm install -g @clawhub/cli"
+  fi
+
+  # 2. Check required files exist
   REQUIRED_FILES=("SKILL.md" "package.json" "_meta.json")
   for f in "${REQUIRED_FILES[@]}"; do
     if [[ ! -f "$PROJECT_DIR/$f" ]]; then
@@ -136,21 +260,21 @@ if ! $SKIP_CHECKS; then
   done
   success "Required files present (SKILL.md, package.json, _meta.json)"
 
-  # 2. Check scripts directory
+  # 3. Check scripts directory
   if [[ ! -d "$PROJECT_DIR/scripts" ]]; then
     fatal "Scripts directory missing"
   fi
   SCRIPT_COUNT=$(find "$PROJECT_DIR/scripts" -name "*.js" -o -name "*.py" | wc -l | tr -d ' ')
   success "Scripts directory OK ($SCRIPT_COUNT scripts found)"
 
-  # 3. Check references directory
+  # 4. Check references directory
   if [[ ! -d "$PROJECT_DIR/references" ]]; then
     fatal "References directory missing"
   fi
   REF_COUNT=$(find "$PROJECT_DIR/references" -name "*.md" | wc -l | tr -d ' ')
   success "References directory OK ($REF_COUNT framework files found)"
 
-  # 4. Check Node.js dependencies
+  # 5. Check Node.js dependencies
   if [[ -f "$PROJECT_DIR/package.json" ]]; then
     if [[ ! -d "$PROJECT_DIR/node_modules" ]]; then
       warn "node_modules not found — running npm install..."
@@ -161,14 +285,6 @@ if ! $SKIP_CHECKS; then
     else
       success "Node.js dependencies present"
     fi
-  fi
-
-  # 5. Check Python3 availability (for feixing.py)
-  if command -v python3 &>/dev/null; then
-    PYTHON_VER=$(python3 --version 2>&1)
-    success "Python3 available ($PYTHON_VER)"
-  else
-    warn "Python3 not found — feixing.py may not work"
   fi
 
   # 6. Check git status
@@ -184,18 +300,10 @@ if ! $SKIP_CHECKS; then
   echo ""
 fi
 
-# ── Read Current Versions ────────────────────────────────────
-CURRENT_META_VERSION=$(python3 -c "import json; print(json.load(open('$PROJECT_DIR/_meta.json'))['version'])" 2>/dev/null || echo "unknown")
-CURRENT_PKG_VERSION=$(python3 -c "import json; print(json.load(open('$PROJECT_DIR/package.json'))['version'])" 2>/dev/null || echo "unknown")
+# ── Sync Versions Across Files ───────────────────────────────
+info "Syncing version to v$VERSION across all files..."
 
-info "Current versions:"
-info "  _meta.json:   v$CURRENT_META_VERSION"
-info "  package.json: v$CURRENT_PKG_VERSION"
-info "  Target:       v$VERSION"
-echo ""
-
-# ── Update Version in _meta.json ─────────────────────────────
-info "Updating _meta.json..."
+# Update _meta.json
 if ! $DRY_RUN; then
   python3 -c "
 import json
@@ -212,8 +320,7 @@ else
   success "_meta.json → v$VERSION (dry-run)"
 fi
 
-# ── Update Version in package.json ───────────────────────────
-info "Updating package.json..."
+# Update package.json
 if ! $DRY_RUN; then
   python3 -c "
 import json
@@ -230,8 +337,7 @@ else
   success "package.json → v$VERSION (dry-run)"
 fi
 
-# ── Update Version in SKILL.md ───────────────────────────────
-info "Updating SKILL.md version field..."
+# Update SKILL.md
 if ! $DRY_RUN; then
   if grep -q "^version:" "$PROJECT_DIR/SKILL.md"; then
     sed -i '' "s/^version: .*/version: $VERSION/" "$PROJECT_DIR/SKILL.md"
@@ -243,18 +349,13 @@ else
   success "SKILL.md → v$VERSION (dry-run)"
 fi
 
-# ── Update Display Name (if provided) ───────────────────────
+# Update display name if provided
 if [[ -n "$DISPLAY_NAME" ]]; then
-  info "Updating display name to: $DISPLAY_NAME"
-
   if ! $DRY_RUN; then
-    # Update SKILL.md name field
     if grep -q "^name:" "$PROJECT_DIR/SKILL.md"; then
       sed -i '' "s/^name: .*/name: $DISPLAY_NAME/" "$PROJECT_DIR/SKILL.md"
       success "SKILL.md name → $DISPLAY_NAME"
     fi
-
-    # Update package.json description to include display name
     python3 -c "
 import json
 path = '$PROJECT_DIR/package.json'
@@ -266,60 +367,7 @@ with open(path, 'w') as f:
     f.write('\n')
 "
     success "package.json displayName → $DISPLAY_NAME"
-  else
-    success "Display name update (dry-run)"
   fi
-fi
-
-echo ""
-
-# ── Build Manifest ───────────────────────────────────────────
-info "Generating publish manifest..."
-
-MANIFEST_FILE="$PROJECT_DIR/.publish-manifest.json"
-if ! $DRY_RUN; then
-  python3 -c "
-import json, os, datetime
-
-project = '$PROJECT_DIR'
-version = '$VERSION'
-display_name = '$DISPLAY_NAME' or None
-
-# Collect all publishable files
-files = []
-skip_dirs = {'node_modules', '.git', '.publish-manifest.json'}
-skip_files = {'.DS_Store', '.gitignore', 'package-lock.json'}
-
-for root, dirs, filenames in os.walk(project):
-    dirs[:] = [d for d in dirs if d not in skip_dirs]
-    for fname in filenames:
-        if fname in skip_files:
-            continue
-        fpath = os.path.join(root, fname)
-        rel = os.path.relpath(fpath, project)
-        size = os.path.getsize(fpath)
-        files.append({'path': rel, 'size': size})
-
-manifest = {
-    'slug': 'fortune-master-ultimate',
-    'version': version,
-    'displayName': display_name,
-    'publishedAt': datetime.datetime.now().isoformat(),
-    'fileCount': len(files),
-    'totalSize': sum(f['size'] for f in files),
-    'files': sorted(files, key=lambda x: x['path'])
-}
-
-with open('$MANIFEST_FILE', 'w') as f:
-    json.dump(manifest, f, indent=2, ensure_ascii=False)
-    f.write('\n')
-
-print(f'  Files: {len(files)}')
-print(f'  Total size: {sum(f[\"size\"] for f in files) / 1024:.1f} KB')
-"
-  success "Manifest generated → .publish-manifest.json"
-else
-  success "Manifest generation (dry-run)"
 fi
 
 echo ""
@@ -330,7 +378,7 @@ if ! $SKIP_GIT && ! $DRY_RUN; then
     info "Committing version bump..."
     (
       cd "$PROJECT_DIR"
-      git add _meta.json package.json SKILL.md .publish-manifest.json
+      git add _meta.json package.json SKILL.md
       git commit -m "chore: release v$VERSION" -m "Published as: ${DISPLAY_NAME:-fortune-master-ultimate}" --allow-empty
     )
     success "Committed: chore: release v$VERSION"
@@ -338,6 +386,8 @@ if ! $SKIP_GIT && ! $DRY_RUN; then
     info "Creating git tag v$VERSION..."
     (
       cd "$PROJECT_DIR"
+      # Delete existing tag if present (for retries on same version)
+      git tag -d "v$VERSION" 2>/dev/null || true
       git tag -a "v$VERSION" -m "Release v$VERSION — ${DISPLAY_NAME:-fortune-master-ultimate}"
     )
     success "Tagged: v$VERSION"
@@ -350,37 +400,104 @@ fi
 
 echo ""
 
-# ── Simulate clawhub publish ────────────────────────────────
+# ── Publish with Retry ───────────────────────────────────────
 info "Publishing to ClawHub..."
 echo ""
 
 # Build the clawhub publish command
 CMD=(clawhub publish "$PROJECT_DIR" --version "$VERSION")
-if [[ -n "$DISPLAY_NAME" ]]; then
-  CMD+=(--name "$DISPLAY_NAME")
-fi
+[[ -n "$DISPLAY_NAME" ]] && CMD+=(--name "$DISPLAY_NAME")
+[[ -n "$SLUG" ]]         && CMD+=(--slug "$SLUG")
+[[ -n "$CHANGELOG" ]]    && CMD+=(--changelog "$CHANGELOG")
+[[ -n "$FORK_OF" ]]      && CMD+=(--fork-of "$FORK_OF")
+[[ -n "$TAGS" ]]          && CMD+=(--tags "$TAGS")
 
 # Display the command
-echo -e "  ${BOLD}clawhub publish${NC} $PROJECT_DIR \\"
-echo -e "    --version ${BOLD}$VERSION${NC} \\"
-if [[ -n "$DISPLAY_NAME" ]]; then
-  echo -e "    --name ${BOLD}$DISPLAY_NAME${NC}"
-fi
+echo -e "  ${BOLD}\$ ${CMD[*]}${NC}"
 echo ""
 
-if ! $DRY_RUN; then
-  # Execute the actual clawhub publish command
-  if command -v clawhub &>/dev/null; then
-    "${CMD[@]}"
-  else
-    warn "clawhub CLI not found — simulating publish"
-    STEPS=("Validating SKILL.md" "Packaging assets" "Uploading scripts" "Uploading references" "Uploading assets" "Registering version" "Updating index")
-    for step in "${STEPS[@]}"; do
-      echo -ne "  ${CYAN}⏳${NC} $step..."
-      sleep 0.3
-      echo -e "\r  ${GREEN}✔${NC}  $step    "
-    done
+if $DRY_RUN; then
+  info "Dry run — skipping actual publish"
+  echo ""
+else
+  ATTEMPT=0
+  PUBLISH_SUCCESS=false
+
+  while [[ $ATTEMPT -lt $MAX_RETRIES ]]; do
+    ATTEMPT=$((ATTEMPT + 1))
+    echo -e "  ${CYAN}⏳${NC} Attempt ${BOLD}${ATTEMPT}/${MAX_RETRIES}${NC} (timeout: ${TIMEOUT}s)..."
+
+    # Run clawhub publish with timeout
+    set +e
+    if command -v gtimeout &>/dev/null; then
+      # macOS with coreutils (brew install coreutils)
+      TIMEOUT_CMD="gtimeout"
+    elif command -v timeout &>/dev/null; then
+      # Linux / GNU timeout
+      TIMEOUT_CMD="timeout"
+    else
+      # Fallback: no timeout command available, use background + wait
+      TIMEOUT_CMD=""
+    fi
+
+    if [[ -n "$TIMEOUT_CMD" ]]; then
+      OUTPUT=$("$TIMEOUT_CMD" "$TIMEOUT" "${CMD[@]}" 2>&1)
+      EXIT_CODE=$?
+    else
+      # Manual timeout using background process
+      "${CMD[@]}" &
+      PID=$!
+      ELAPSED=0
+      while kill -0 "$PID" 2>/dev/null && [[ $ELAPSED -lt $TIMEOUT ]]; do
+        sleep 1
+        ELAPSED=$((ELAPSED + 1))
+      done
+      if kill -0 "$PID" 2>/dev/null; then
+        kill -9 "$PID" 2>/dev/null
+        wait "$PID" 2>/dev/null
+        EXIT_CODE=124  # simulate timeout exit code
+        OUTPUT="Timeout after ${TIMEOUT}s"
+      else
+        wait "$PID"
+        EXIT_CODE=$?
+        OUTPUT=""
+      fi
+    fi
+    set -e
+
+    if [[ $EXIT_CODE -eq 0 ]]; then
+      PUBLISH_SUCCESS=true
+      echo -e "  ${GREEN}✔${NC}  Publish succeeded on attempt ${ATTEMPT}!"
+      [[ -n "$OUTPUT" ]] && echo "$OUTPUT"
+      break
+    elif [[ $EXIT_CODE -eq 124 ]]; then
+      # Timeout
+      warn "Attempt ${ATTEMPT} timed out after ${TIMEOUT}s"
+    else
+      # Other error
+      warn "Attempt ${ATTEMPT} failed (exit code: ${EXIT_CODE})"
+      [[ -n "$OUTPUT" ]] && echo -e "     ${RED}${OUTPUT}${NC}"
+    fi
+
+    if [[ $ATTEMPT -lt $MAX_RETRIES ]]; then
+      info "Retrying in ${RETRY_DELAY}s..."
+      sleep "$RETRY_DELAY"
+    fi
+  done
+
+  echo ""
+
+  if ! $PUBLISH_SUCCESS; then
+    error "All ${MAX_RETRIES} publish attempts failed!"
     echo ""
+    echo -e "  ${YELLOW}Suggestions:${NC}"
+    echo "  1. Check your network connection"
+    echo "  2. Verify clawhub login: clawhub whoami"
+    echo "  3. Try with longer timeout: --timeout 180"
+    echo "  4. Try with more retries: --retries 5"
+    echo "  5. Manual publish: ${CMD[*]}"
+    echo ""
+    exit 1
   fi
 fi
 
