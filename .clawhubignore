@@ -1,0 +1,47 @@
+# ClawHub publish ignore — keep the skill bundle small & clean.
+# Files/directories listed here are excluded from the published tarball.
+
+# Dependencies (runtime installs them on demand if needed)
+node_modules/
+
+# VCS internals
+.git/
+.gitignore
+.gitattributes
+
+# CI / editor metadata
+.github/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Build & cache
+dist/
+build/
+.cache/
+.parcel-cache/
+*.log
+logs/
+
+# Local env & secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Personal profiles generated at runtime — never publish user data
+data/profiles/*.json
+!data/profiles/template.json
+
+# Tests / fixtures not required for runtime
+test/
+tests/
+__tests__/
+*.test.js
+*.spec.js
+
+# Publish artifacts
+.clawhub/
+*.clawpkg

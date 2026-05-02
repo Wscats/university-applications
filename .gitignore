@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Build / cache
+dist/
+build/
+.cache/
+.parcel-cache/
+.next/
+.nuxt/
+out/
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Runtime user data (do NOT publish personal profiles)
+data/profiles/*.json
+!data/profiles/template.json
+
+# Logs
+logs/
+*.log
+
+# ClawHub publishing artifacts
+.clawhub/
+*.clawpkg

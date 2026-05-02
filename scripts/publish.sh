@@ -274,16 +274,14 @@ if ! $SKIP_CHECKS; then
   REF_COUNT=$(find "$PROJECT_DIR/references" -name "*.md" | wc -l | tr -d ' ')
   success "References directory OK ($REF_COUNT framework files found)"
 
-  # 5. Check Node.js dependencies
+  # 5. Node.js dependencies — intentionally ignored during publish.
+  # node_modules is excluded via .clawhubignore; the ClawHub runtime installs
+  # required packages on demand. We keep this check informational only.
   if [[ -f "$PROJECT_DIR/package.json" ]]; then
-    if [[ ! -d "$PROJECT_DIR/node_modules" ]]; then
-      warn "node_modules not found — running npm install..."
-      if ! $DRY_RUN; then
-        (cd "$PROJECT_DIR" && npm install --silent)
-        success "Dependencies installed"
-      fi
+    if [[ -d "$PROJECT_DIR/node_modules" ]]; then
+      info "node_modules present locally (ignored by .clawhubignore — not published)"
     else
-      success "Node.js dependencies present"
+      info "node_modules absent (OK — installed on demand by runtime)"
     fi
   fi
 

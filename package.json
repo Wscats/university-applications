@@ -44,6 +44,16 @@
     "scripts": "scripts",
     "data": "data"
   },
+  "files": [
+    "SKILL.md",
+    "README.md",
+    "_meta.json",
+    "scripts/",
+    "references/",
+    "data/profiles/template.json",
+    "liuyao/"
+  ],
+  "private": false,
   "dependencies": {
     "iztro": "^2.5.8"
   },
