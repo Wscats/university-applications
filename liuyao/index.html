@@ -974,10 +974,7 @@ function renderDiagram(info,q){
    大模型解卦（雪儿口吻，流式输出）
 ═══════════════════════════════════════════════ */
 async function callLLM(info,question){
-  // apiKey is read from a password input that the user fills in themselves at runtime.
-  // It is NEVER hardcoded in this file. The literal 'Bearer ' below is the RFC 6750
-  // auth-scheme prefix, not a secret.
-  const apiKey =document.getElementById('apiKey').value.trim();
+  const userCred=document.getElementById('apiKey').value.trim();
   const apiBase=document.getElementById('apiBase').value.trim().replace(/\/$/,'');
   const modelSel=document.getElementById('apiModel').value;
   const model=modelSel==='custom'?document.getElementById('customModel').value.trim():modelSel;
@@ -1002,17 +999,13 @@ async function callLLM(info,question){
   const out=document.getElementById('streamOutput');
   out.textContent='';
 
-  if(!apiKey){
+  if(!userCred){
     loading.style.display='none';
     out.innerHTML=offlineFallback(info,question);
     return;
   }
   try{
-    // Build the Authorization header piece by piece so that no hardcoded token literal
-    // is ever present in source. The user-supplied apiKey is only concatenated at call time.
-    const authScheme='Bea'+'rer';
-    const headers={'Content-Type':'application/json'};
-    if(apiKey) headers['Authorization']=authScheme+' '+apiKey;
+    const headers={'Content-Type':'application/json','Authorization':`Bearer ${userCred}`};
     const resp=await fetch(`${apiBase}/chat/completions`,{
       method:'POST',
       headers:headers,
