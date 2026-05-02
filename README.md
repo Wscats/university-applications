@@ -71,18 +71,38 @@ node scripts/daily-fortune.js
 
 ## 🔒 安全说明
 
-### 无外部网络调用
+### 默认无外部网络调用
 
-本 Skill 的所有脚本（包括推送脚本和发布脚本）**不包含任何外部网络调用**。
+本 Skill 所有随仓库发布的脚本（包括推送脚本和发布脚本）**不包含任何外部网络调用**。
 已验证所有 JS/Python 脚本中不存在 `fetch`、`axios`、`https.request`、`http.request`、
 `curl`、`wget` 等网络请求代码。
 
-> ℹ️ **关于六爻 HTML UI**：`liuyao/index.html` 中的 Google Fonts 外部链接已被注释，默认使用系统本地楷体，完全离线。
-> 解卦功能中的大模型 API 接口地址为用户可配置项（默认值 `https://api.openai.com/v1`），本 Skill 不内置任何 API Key。
+### 可选网络用途（用户主动触发）
 
-### 推送机制
+以下功能需要用户**自行配置**才会产生网络请求，本 Skill 不内置任何密钥与端点：
 
-每日运程推送功能通过 **OpenClaw 运行时 IPC 协议** 实现，而非直接调用第三方 API：
+| 功能 | 触发条件 | 网络用途 |
+|------|---------|---------|
+| `liuyao/index.html` 智能解卦 | 用户在浏览器填入 API Key + Endpoint 并点击按钮 | 浏览器直接 POST 到用户配置的 LLM 端点（默认占位 `https://api.openai.com/v1`），仅传递卦象与问题；API Key 仅存浏览器 localStorage |
+| `liuyao/index.html` Google Fonts | **默认注释关闭**；用户手动取消注释才生效 | 字体请求 |
+
+> 建议：若启用 LLM 解卦，请申请一个**受限的、仅用于本功能的 API Key**，不要使用共享主账号密钥。
+
+### 推送机制（默认关闭，opt-in）
+每日运程推送默认**不会启用**；只有用户显式运行 `push-toggle.js on` 后才会注册定时任务，随时可用 `off` 删除：
+
+```bash
+# 开启（首次使用）
+node scripts/push-toggle.js on <userId>
+
+# 关闭（会删除该用户全部推送的 cron）
+node scripts/push-toggle.js off <userId>
+
+# 查看当前状态
+node scripts/push-toggle.js status <userId>
+```
+
+推送功能通过 **OpenClaw 运行时 IPC 协议** 实现，而非直接调用第三方 API：
 
 - `daily-push.js`：生成运程内容后通过 `console.log()` 输出，由 OpenClaw cron 运行时负责投递
 - `push-toggle.js`：通过 `__OPENCLAW_CRON_ADD__` / `__OPENCLAW_CRON_RM__` IPC 消息管理定时任务
@@ -104,6 +124,19 @@ node scripts/daily-fortune.js
 
 本 Skill 不需要任何第三方 API Token（Telegram Bot Token、SMTP 密码等）。
 所有消息投递由 OpenClaw 平台运行时统一管理。
+
+### 用户数据与隐私控制
+
+用户档案（生日、出生地、可选家庭成员八字、交互日志）**仅在用户主动提供时写入本地** `data/profiles/<userId>.json`，不上传。随时可查看、修改或删除：
+
+```bash
+node scripts/profile.js show <userId>          # 查看
+node scripts/profile.js list                    # 列出所有档案
+node scripts/profile.js save <userId> <字段> <值>  # 修改
+node scripts/profile.js delete <userId>         # 删除本人与家庭成员全部记录
+```
+
+建议：只在确实需要交叉验证时才录入家庭成员八字，并定期审查 / 清理已留存的数据。
 
 ---
 

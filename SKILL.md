@@ -24,20 +24,53 @@ metadata:
         required: false
         description: "Optional path to ZiWei pattern knowledge base (.md files)."
     security:
-      network: none
-      credentials: none
+      network:
+        default: none
+        optional:
+          - feature: "liuyao HTML LLM divination (user-initiated, in-browser)"
+            endpoint: "user-configured (default placeholder: https://api.openai.com/v1)"
+            data-sent: "only the hexagram and the user's typed question"
+            credential: "user-provided LLM API key, entered at runtime, stored in browser localStorage only"
+          - feature: "liuyao HTML Google Fonts (commented out by default)"
+            endpoint: "https://fonts.googleapis.com"
+            data-sent: "none beyond standard font request"
+            credential: none
+      credentials:
+        bundled: none
+        required: none
+        user-optional:
+          - "LLM API key for liuyao/index.html divination feature (scope it to a separate limited key, never reused)"
       push-mechanism: openclaw-ipc
+      push-optin: true
+      push-default-state: disabled
+      data-retention:
+        location: "local filesystem under data/profiles/ and data/push-log.json"
+        remote-upload: none
+        user-controls:
+          - "view:   node scripts/profile.js show <userId>"
+          - "list:   node scripts/profile.js list"
+          - "edit:   node scripts/profile.js save <userId> <field> <value>"
+          - "delete: node scripts/profile.js delete <userId>"
+          - "disable push: node scripts/push-toggle.js off <userId>"
       notes: |
-        All scripts perform local computation only — no fetch, axios, https.request,
-        curl, wget, or any outbound network calls. Push delivery is handled entirely
-        by the OpenClaw runtime via stdout/IPC protocol. The 'channels' field in user
-        profiles (e.g. telegram) is a routing hint for the OpenClaw runtime, not a
-        direct API integration. This skill does not hold or require any third-party
-        API tokens (Telegram Bot Token, SMTP credentials, webhook URLs, etc.).
-        publish.sh is a local-only version management script with no remote upload.
-        The liuyao/index.html UI defaults to offline system fonts (STKaiti/KaiTi);
-        Google Fonts links are commented out. The LLM divination feature requires
-        user-provided API Key and endpoint — no keys are bundled or hardcoded.
+        All bundled scripts perform local computation only — no fetch, axios,
+        https.request, curl, wget, or any outbound network calls from the Node/Python
+        side. Push delivery is handled entirely by the OpenClaw runtime via stdout/IPC
+        protocol, and is OPT-IN (disabled until the user runs push-toggle.js on).
+        The 'channels' field in user profiles (e.g. telegram) is a routing hint for
+        the OpenClaw runtime, not a direct API integration. This skill does not hold
+        or require any third-party API tokens (Telegram Bot Token, SMTP credentials,
+        webhook URLs, etc.). publish.sh is a local-only version management script
+        with no remote upload.
+        EXCEPTION — OPTIONAL LLM NETWORK USE: the browser-only file liuyao/index.html
+        exposes an optional "LLM divination" button. If and only if the user clicks
+        it and fills in their own API key + endpoint, the browser (not the skill
+        process) will POST the hexagram and question to that user-configured endpoint.
+        No key is bundled, hardcoded, or transmitted anywhere else. Users are advised
+        to supply a scoped/limited API key rather than a primary account key.
+        User profile data (birth details, optional family members, interaction log)
+        is stored only on the local filesystem and can be viewed, edited, or deleted
+        at any time via scripts/profile.js (see data-retention.user-controls above).
 ---
 
 # ☯️ 命理大师 · Fortune Master Ultimate
@@ -265,19 +298,39 @@ node "{baseDir}/scripts/preference-tracker.js" weights|top <userId> [N]
 
 ## ⏰ 每日运程推送
 
-早晨 07:00 推送今日运势，晚间 20:00 推送明日预告。
+> **默认关闭（opt-in）**：除非用户主动运行 `push-toggle.js on`，否则不会创建任何定时任务，也不会产生任何推送。
+
+早晨 07:00 推送今日运势，晚间 20:00 推送明日预告（用户可自定义时间）。
+
+### 开启 / 关闭推送（用户自主控制）
 
 ```bash
-openclaw cron add "0 7 * * *" "cd {baseDir} && node scripts/daily-push.js"
-openclaw cron list
-openclaw cron delete <任务ID>
+# 开启（首次使用请先运行此命令，默认不会自动开启）
+node scripts/push-toggle.js on <userId>
+
+# 自定义时间 / 渠道
+node scripts/push-toggle.js on <userId> --morning 08:00 --evening 20:00
+node scripts/push-toggle.js on <userId> --channel feishu
+
+# 关闭（立即删除该用户的所有定时任务）
+node scripts/push-toggle.js off <userId>
+
+# 查看当前推送状态与定时任务 ID
+node scripts/push-toggle.js status <userId>
+```
+
+底层 cron 由 OpenClaw 运行时托管，仅在用户显式 opt-in 后才会注册：
+
+```bash
+openclaw cron list              # 查看当前已注册任务
+openclaw cron delete <任务ID>    # 也可直接按 ID 删除
 ```
 
 推送内容：综合指数、幸运颜色/方位/数字、今日宜忌、风险预警、吉时、每日一言。
 
 ### 推送机制说明
 
-> **⚠️ 重要：本 Skill 不包含任何外部网络调用。**
+> **⚠️ 重要：本 Skill 不包含任何外部网络调用（可选的浏览器端 LLM 解卦除外，见下文「可选网络用途」）。**
 
 - `daily-push.js`：纯本地计算，生成运程文本后通过 `console.log()` 输出，由 OpenClaw cron 运行时负责投递给用户
 - `push-toggle.js`：通过 `__OPENCLAW_CRON_ADD__` / `__OPENCLAW_CRON_RM__` IPC 消息与 OpenClaw 运行时通信，管理定时任务
@@ -327,6 +380,34 @@ liuyao/                       # 六爻交互界面
 ```
 
 > 所有数据均存储在本地文件系统，不上传至任何外部服务。
+
+### 🔐 数据留存与用户控制（隐私）
+
+用户档案包含生日、出生地、可选的家庭成员（配偶/父母/子女）八字以及交互日志。这些字段**仅在你主动提供时才会被写入**，并且全部留在本地 `data/profiles/<userId>.json`。
+
+| 操作 | 命令 |
+|------|------|
+| 查看自己的档案 | `node scripts/profile.js show <userId>` |
+| 列出所有已保存档案 | `node scripts/profile.js list` |
+| 修改单个字段 | `node scripts/profile.js save <userId> <字段> <值>` |
+| 删除某个档案（含所有家庭成员与日志） | `node scripts/profile.js delete <userId>` |
+| 关闭每日推送 | `node scripts/push-toggle.js off <userId>` |
+
+建议：
+- 只在确实需要多体系交叉验证时才录入家庭成员八字；不需要时留空即可。
+- 定期运行 `profile.js show` 审查已留存的数据，按需 `delete` 清理。
+- `interactionLog` 仅用于本地偏好学习，可随时手动从 JSON 中清空。
+
+### 🌐 可选网络用途（透明披露）
+
+本 Skill 默认**不发起任何网络请求**。下列功能属于**用户主动触发且需要用户自行配置**的可选网络用途，不会默认启用：
+
+| 功能 | 触发方式 | 发送的数据 | 凭证 |
+|------|---------|-----------|------|
+| `liuyao/index.html` 大模型解卦 | 用户在浏览器中填写 API Key + Endpoint 并点击「智能解卦」 | 当前卦象与用户输入的问题 | 用户自备 LLM API Key，仅存浏览器 localStorage，不回传本仓库 |
+| `liuyao/index.html` Google Fonts | **默认已注释关闭**；用户手动取消注释后才生效 | 字体请求 | 无 |
+
+> 如启用 LLM 解卦，请使用一个**仅用于此用途的受限 API Key**，避免共享主账号密钥。
 
 ---
 

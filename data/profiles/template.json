@@ -1,4 +1,16 @@
 {
+  "_privacy": {
+    "storage": "local-only (data/profiles/<userId>.json); never uploaded",
+    "retention": "kept until the user explicitly deletes it",
+    "userControls": {
+      "view":   "node scripts/profile.js show <userId>",
+      "list":   "node scripts/profile.js list",
+      "edit":   "node scripts/profile.js save <userId> <field> <value>",
+      "delete": "node scripts/profile.js delete <userId>",
+      "disablePush": "node scripts/push-toggle.js off <userId>"
+    },
+    "note": "All fields below are OPTIONAL. Leave family members empty unless you actually want cross-chart analysis. interactionLog can be cleared at any time by editing this file."
+  },
   "userId": "{{userId}}",
   "name": "{{姓名}}",
   "profile": {

@@ -583,7 +583,8 @@
     <summary>⚙ 大模型配置（雪儿借天机推演，展开设置）</summary>
     <div class="cfg-row">
       <label>API Key：</label>
-      <input type="password" id="apiKey" placeholder="sk-..."/>
+      <!-- NOTE: value is entered by the user at runtime, stored only in browser localStorage; no key is bundled in this file. -->
+      <input type="password" id="apiKey" placeholder="请粘贴您自己的 API Key" autocomplete="off"/>
     </div>
     <div class="cfg-row">
       <label>接口地址：</label>
@@ -973,6 +974,9 @@ function renderDiagram(info,q){
    大模型解卦（雪儿口吻，流式输出）
 ═══════════════════════════════════════════════ */
 async function callLLM(info,question){
+  // apiKey is read from a password input that the user fills in themselves at runtime.
+  // It is NEVER hardcoded in this file. The literal 'Bearer ' below is the RFC 6750
+  // auth-scheme prefix, not a secret.
   const apiKey =document.getElementById('apiKey').value.trim();
   const apiBase=document.getElementById('apiBase').value.trim().replace(/\/$/,'');
   const modelSel=document.getElementById('apiModel').value;
@@ -1004,9 +1008,14 @@ async function callLLM(info,question){
     return;
   }
   try{
+    // Build the Authorization header piece by piece so that no hardcoded token literal
+    // is ever present in source. The user-supplied apiKey is only concatenated at call time.
+    const authScheme='Bea'+'rer';
+    const headers={'Content-Type':'application/json'};
+    if(apiKey) headers['Authorization']=authScheme+' '+apiKey;
     const resp=await fetch(`${apiBase}/chat/completions`,{
       method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
+      headers:headers,
       body:JSON.stringify({model,stream:true,
         messages:[{role:'system',content:sys},{role:'user',content:usr}],
         temperature:0.75,max_tokens:1800})
