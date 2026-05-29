@@ -676,10 +676,18 @@
     </div>
     <div class="cfg-row">
       <label>接口地址：</label>
+      <!--
+        \u23eb \u5916\u53d1\u6e05\u5355\uff08External Transmission SBOM\uff09\uff1a
+        \u4e0b\u9762\u4e09\u4e2a\u9009\u9879\u662f\u5185\u7f6e\u9884\u8bbe\u7684\u7b2c\u4e09\u65b9 LLM \u670d\u52a1\u5546 endpoint\u3002
+        \u9009\u4e2d\u540e\uff0c\u9a8c\u7b97\u51fa\u7684\u5366\u8c61\u4e0e\u60a8\u8f93\u5165\u7684\u95ee\u9898\u5c06\u901a\u8fc7 HTTPS POST \u5230\uff1a
+          - https://api.openai.com/v1     \u5f52\u5c5e\u4e3b\u4f53\uff1aOpenAI, Inc. (US)
+          - https://api.anthropic.com/v1  \u5f52\u5c5e\u4e3b\u4f53\uff1aAnthropic, PBC (US)
+          - https://api.deepseek.com/v1   \u5f52\u5c5e\u4e3b\u4f53\uff1aDeepSeek (CN)
+        \u8be5\u9009\u62e9\u4ec5\u5728\u672c\u9875\u9762 callLLM() \u4e2d\u4f7f\u7528\uff08\u89c1\u4e0b\u65b9 fetch \u8c03\u7528\uff09\uff1b\n        \u4e0d\u9009\u62e9\u6216\u4e0d\u586b API Key \u65f6\uff0c\u9875\u9762\u8d70\u300c\u79bb\u7ebf\u515c\u5e95\u89e3\u5366\u300d\uff0c**\u4e0d\u4ea7\u751f\u4efb\u4f55\u5916\u53d1\u8bf7\u6c42**\u3002\n      -->
       <select id="apiBase">
-        <option value="https://api.openai.com/v1">OpenAI 官方 (api.openai.com)</option>
-        <option value="https://api.anthropic.com/v1">Anthropic 官方 (api.anthropic.com)</option>
-        <option value="https://api.deepseek.com/v1">DeepSeek 官方 (api.deepseek.com)</option>
+        <option value="https://api.openai.com/v1">OpenAI 官方 (api.openai.com · 外发到 OpenAI 美国)</option>
+        <option value="https://api.anthropic.com/v1">Anthropic 官方 (api.anthropic.com · 外发到 Anthropic 美国)</option>
+        <option value="https://api.deepseek.com/v1">DeepSeek 官方 (api.deepseek.com · 外发到 DeepSeek 中国)</option>
         <option value="__custom__">⚠ 自定义（高风险 · 仅在确认服务方完全可信时使用）</option>
       </select>
     </div>

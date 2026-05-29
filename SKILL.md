@@ -1,7 +1,7 @@
 ---
 name: university-applications
 description: |
-  【命理大师 / Fortune Master】全体系命理大师——融合八字/四柱、紫微斗数、奇门遁甲、六爻、梅花易数、塔罗、西方星盘、
+  全体系命理大师——融合八字/四柱、紫微斗数、奇门遁甲、六爻、梅花易数、塔罗、西方星盘、
   数字命理、九宫飞星风水、择时择吉于一体的综合命理技能。支持用户注册与档案管理（本地）、
   可选的每日运程推送（默认关闭）、交互式六爻占卜界面、九宫飞星计算脚本、HTML 报告生成。
   自动识别体系与资料完整度，按 S/A/B/C 四级精度输出解读。
@@ -12,8 +12,8 @@ description: |
     注意：仅为文化/爱好参考，不是医疗、法律、心理、财务、婚姻专业建议；遇重大决策请咨询专业人士。
 metadata:
   displayName: "命理大师"
-  version: 1.1.9
-  keywords: 八字, 紫微斗数, 奇门遁甲, 六爻, 梅花易数, 塔罗, 星盘, 九宫飞星, 今日运势, 每日运程, 合婚, 择吉, 生命灵数, BaZi, ZiWei, QiMen, Tarot, feng shui, I Ching, numerology, daily horoscope
+  version: 1.2.0
+  keywords: 八字, 紫微斗数, 奇门遁甲, 六爻, 梅花易数, 塔罗, 星盘, 九宫飞星, 今日运势, 每日运程, 合婚, 择吉, 生命灵数, 风水, 算命, BaZi, ZiWei, QiMen, Tarot, feng shui, I Ching, numerology, daily horoscope
   # 触发关键词收紧：1.1.8 移除「算命 / 占卜 / 命理 / 数字命理 / fortune telling / astrology」等过宽泛词，
   # 避免在用户未明确要求占卜的对话中误激活本 skill；仅在明确出现具体体系名称或具体主题时才被触发。
   openclaw:
