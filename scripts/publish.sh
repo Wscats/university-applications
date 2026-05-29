@@ -53,7 +53,7 @@ fatal()   { error "$*"; exit 1; }
 banner() {
   echo ""
   echo -e "${BOLD}☯️  ClawHub Skill Publisher${NC}"
-  echo -e "   ${CYAN}fortune-master-ultimate${NC}"
+  echo -e "   ${CYAN}university-applications${NC}"
   echo "   ─────────────────────────────"
   echo ""
 }
@@ -339,7 +339,21 @@ fi
 if ! $DRY_RUN; then
   if grep -q "^version:" "$PROJECT_DIR/SKILL.md"; then
     sed -i '' "s/^version: .*/version: $VERSION/" "$PROJECT_DIR/SKILL.md"
-    success "SKILL.md → v$VERSION"
+    success "SKILL.md → v$VERSION (top-level)"
+  elif grep -qE "^[[:space:]]+version:" "$PROJECT_DIR/SKILL.md"; then
+    # version is nested under metadata: → only update the first nested one
+    awk -v v="$VERSION" '
+      !done && /^[[:space:]]+version:[[:space:]]/ {
+        match($0, /^[[:space:]]+/);
+        prefix = substr($0, RSTART, RLENGTH);
+        print prefix "version: " v;
+        done = 1;
+        next
+      }
+      { print }
+    ' "$PROJECT_DIR/SKILL.md" > "$PROJECT_DIR/SKILL.md.tmp" \
+      && mv "$PROJECT_DIR/SKILL.md.tmp" "$PROJECT_DIR/SKILL.md"
+    success "SKILL.md → v$VERSION (metadata.version)"
   else
     warn "No version field found in SKILL.md — skipped"
   fi
@@ -348,11 +362,26 @@ else
 fi
 
 # Update display name if provided
+# IMPORTANT: never overwrite the top-level `name:` field (it must equal the slug
+# and contain only [a-z0-9-]). Instead, write the human-readable display name
+# into metadata.displayName so SkillSpector won't flag identity mismatches.
 if [[ -n "$DISPLAY_NAME" ]]; then
   if ! $DRY_RUN; then
-    if grep -q "^name:" "$PROJECT_DIR/SKILL.md"; then
-      sed -i '' "s/^name: .*/name: $DISPLAY_NAME/" "$PROJECT_DIR/SKILL.md"
-      success "SKILL.md name → $DISPLAY_NAME"
+    if grep -qE "^[[:space:]]+displayName:" "$PROJECT_DIR/SKILL.md"; then
+      awk -v dn="$DISPLAY_NAME" '
+        !done && /^[[:space:]]+displayName:[[:space:]]/ {
+          match($0, /^[[:space:]]+/);
+          prefix = substr($0, RSTART, RLENGTH);
+          print prefix "displayName: \"" dn "\"";
+          done = 1;
+          next
+        }
+        { print }
+      ' "$PROJECT_DIR/SKILL.md" > "$PROJECT_DIR/SKILL.md.tmp" \
+        && mv "$PROJECT_DIR/SKILL.md.tmp" "$PROJECT_DIR/SKILL.md"
+      success "SKILL.md metadata.displayName → $DISPLAY_NAME"
+    else
+      warn "metadata.displayName not found in SKILL.md — skipped (top-level name preserved)"
     fi
     python3 -c "
 import json
@@ -377,7 +406,7 @@ if ! $SKIP_GIT && ! $DRY_RUN; then
     (
       cd "$PROJECT_DIR"
       git add _meta.json package.json SKILL.md
-      git commit -m "chore: release v$VERSION" -m "Published as: ${DISPLAY_NAME:-fortune-master-ultimate}" --allow-empty
+  git commit -m "chore: release v$VERSION" -m "Published as: ${DISPLAY_NAME:-university-applications}" --allow-empty
     )
     success "Committed: chore: release v$VERSION"
 
@@ -386,7 +415,7 @@ if ! $SKIP_GIT && ! $DRY_RUN; then
       cd "$PROJECT_DIR"
       # Delete existing tag if present (for retries on same version)
       git tag -d "v$VERSION" 2>/dev/null || true
-      git tag -a "v$VERSION" -m "Release v$VERSION — ${DISPLAY_NAME:-fortune-master-ultimate}"
+  git tag -a "v$VERSION" -m "Release v$VERSION — ${DISPLAY_NAME:-university-applications}"
     )
     success "Tagged: v$VERSION"
   else
@@ -503,10 +532,10 @@ fi
 echo "  ─────────────────────────────────────────"
 echo -e "  ${GREEN}${BOLD}☯️  Published successfully!${NC}"
 echo ""
-echo -e "  Skill:   ${BOLD}fortune-master-ultimate${NC}"
+  echo -e "  Skill:   ${BOLD}university-applications${NC}"
 echo -e "  Name:    ${BOLD}${DISPLAY_NAME:-命理大师}${NC}"
 echo -e "  Version: ${BOLD}v$VERSION${NC}"
-echo -e "  URL:     ${CYAN}https://clawhub.com/skills/fortune-master-ultimate${NC}"
+  echo -e "  URL:     ${CYAN}https://clawhub.com/skills/university-applications${NC}"
 echo "  ─────────────────────────────────────────"
 echo ""
 

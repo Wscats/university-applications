@@ -1,5 +1,5 @@
 ---
-name: 命理大师
+name: university-applications
 description: |
   【命理大师 / Fortune Master】全体系命理大师——融合八字/四柱、紫微斗数、奇门遁甲、六爻、梅花易数、塔罗、西方星盘、
   数字命理、九宫飞星风水、择时择吉于一体的综合命理技能。支持用户注册与档案管理（本地）、
@@ -11,7 +11,7 @@ description: |
     - 明确表达「今日/本周/近期运势」、「择吉择时」、「八字合婚」、「生命灵数/数字命理」等明确主题。
     注意：仅为文化/爱好参考，不是医疗、法律、心理、财务、婚姻专业建议；遇重大决策请咨询专业人士。
 metadata:
-  displayName: "命理大师 / Fortune Master"
+  displayName: "命理大师"
   version: 1.1.5
   keywords: 算命, 八字, 紫微斗数, 奇门遁甲, 六爻, 梅花易数, 塔罗, 星盘, 风水, 九宫飞星, 今日运势, 每日运程, 占卜, 合婚, 择吉, 数字命理, 生命灵数, fortune telling, BaZi, ZiWei, QiMen, Tarot, astrology, feng shui, I Ching, numerology, daily horoscope
   openclaw:

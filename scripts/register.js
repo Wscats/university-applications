@@ -354,30 +354,42 @@ const filePath = saveProfile(userId, profile);
 
 console.log('✅ 注册成功！\n');
 
+// 隐私控制：默认不输出八字原始值及真太阳时微调，需显式追加 --full
+const REG_SHOW_FULL = process.argv.includes('--full');
+
 // 真太阳时提示
 const sc = profile.profile.solarCorrectionMin;
 if (sc !== 0 && profile.profile.solarCorrectionCity) {
   const sign = sc > 0 ? '+' : '';
   console.log(`🌞 真太阳时修正（${profile.profile.solarCorrectionCity}）`);
-  console.log(`  北京时间: ${birthDate} ${birthTime}`);
-  console.log(`  真太阳时: ${profile.profile.trueSolarDate} ${profile.profile.trueSolarTime} (${sign}${sc}分钟)`);
+  if (REG_SHOW_FULL) {
+    console.log(`  北京时间: ${birthDate} ${birthTime}`);
+    console.log(`  真太阳时: ${profile.profile.trueSolarDate} ${profile.profile.trueSolarTime} (${sign}${sc}分钟)`);
+  } else {
+    console.log(`  已保存真太阳时修正（${sign}${sc}分钟），出生时刻已脱敏`);
+  }
   console.log(`  八字时柱以真太阳时计算`);
   console.log('');
 } else if (!profile.profile.solarCorrectionCity) {
-  console.log(`🌞 真太阳时：未识别城市"${birthPlace}"，以北京时间计算（如需精确请使用主要城市名）`);
+  console.log(`🌞 真太阳时：未识别城市${REG_SHOW_FULL ? `“${birthPlace}”` : ''}，以北京时间计算（如需精确请使用主要城市名）`);
   console.log('');
 }
 
-console.log('📊 八字信息');
-console.log(`  年柱: ${profile.bazi.year}`);
-console.log(`  月柱: ${profile.bazi.month}`);
-console.log(`  日柱: ${profile.bazi.day}`);
-console.log(`  时柱: ${profile.bazi.hour}`);
-console.log(`  日主: ${profile.bazi.dayStem} (${profile.bazi.zodiac})`);
+if (REG_SHOW_FULL) {
+  console.log('📊 八字信息（完整）');
+  console.log(`  年柱: ${profile.bazi.year}`);
+  console.log(`  月柱: ${profile.bazi.month}`);
+  console.log(`  日柱: ${profile.bazi.day}`);
+  console.log(`  时柱: ${profile.bazi.hour}`);
+  console.log(`  日主: ${profile.bazi.dayStem} (${profile.bazi.zodiac})`);
+} else {
+  console.log('📊 八字信息');
+  console.log(`  八字已计算并保存。默认不在终端输出原始干支，避免在共享环境中被日志采集。`);
+  console.log(`  查看完整八字：node profile.js show ${userId} --full（仅推荐在个人设备）`);
+}
 console.log('');
-console.log(`📁 档案已保存: ${filePath}`);
+console.log(`📁 档案已保存：${REG_SHOW_FULL ? filePath : path.relative(process.cwd(), filePath)}`);
 console.log('');
-
 // 自动开启推送（如果指定了 --push 参数）
 const pushIdx = args.indexOf('--push');
 if (pushIdx !== -1) {

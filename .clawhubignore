@@ -35,6 +35,11 @@ logs/
 data/profiles/*.json
 !data/profiles/template.json
 
+# Per-user push outbox — contains personalized fortune & must NOT be packaged
+data/outbox/
+data/outbox-dryrun/
+data/push-log.json
+
 # Tests / fixtures not required for runtime
 test/
 tests/

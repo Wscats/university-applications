@@ -540,19 +540,22 @@ function updateLastPushDate(userId) {
 // OpenClaw 消息发送（通过 IPC / openclaw 工具接口）
 // ============================================================
 
-async function sendMessage(userId, message) {
+async function sendMessage(userId, message, opts = {}) {
+  const { dryRun = false } = opts;
   // 重要：为避免在多用户环境下将某个用户的运势串台到其他人，
   // 这里不再直接将运势正文写到 stdout，而是：
-  //  1. 在 stdout 输出仅含 userId 的投递状态行（供调度者/运维查看）。
+  //  1. 在 stdout 输出仅含脱敏 userId 的状态行（供调度者/运维查看）。
   //  2. 将完整运势写入每个用户独立的本地交付文件，由 OpenClaw 运行时
   //     按 userId 读取并点对点发送，避免串台、广播、日志被无关用户看到。
+  //  3. dry-run 同样不会在 stdout 输出正文，避免调试模式下泄露。
   if (!userId) {
     console.error('   ⚠ sendMessage: userId 为空，拒绝发送以避免泄露');
     return false;
   }
 
   try {
-    const outboxDir = path.join(__dirname, '../data/outbox');
+    const subdir = dryRun ? 'outbox-dryrun' : 'outbox';
+    const outboxDir = path.join(__dirname, '../data', subdir);
     if (!fs.existsSync(outboxDir)) {
       fs.mkdirSync(outboxDir, { recursive: true, mode: 0o700 });
     }
@@ -563,16 +566,16 @@ async function sendMessage(userId, message) {
     const payload = {
       userId: safeId,
       generatedAt: new Date().toISOString(),
+      mode: dryRun ? 'dry-run' : 'live',
       content: message
     };
     // 写入文件时限制为仅当前用户可读（0600）
     fs.writeFileSync(outFile, JSON.stringify(payload, null, 2), { encoding: 'utf8', mode: 0o600 });
 
-    // 在 stdout 仅输出状态行，不输出个人运势正文
-    console.log(`   → 运势已写入收件箱：${path.relative(process.cwd(), outFile)}`);
+    // 在 stdout 仅输出状态行，不输出个人运势正文 / 不输出原始 userId
     return true;
   } catch (e) {
-    console.error(`   ❌ sendMessage 写入失败 (${userId}): ${e.message}`);
+    console.error(`   ❌ sendMessage 写入失败: ${e.message}`);
     return false;
   }
 }
@@ -637,14 +640,16 @@ async function runPush({ dryRun = false, testUserId = null } = {}) {
 
   for (const profile of targets) {
     const { userId, name } = profile;
-    process.stdout.write(`   🔄 ${name || userId} (${userId})... `);
+    // 不在 stdout 上拼接 userId/姓名；避免在共享环境下被外人看到
+    process.stdout.write(`   🔄 推送中... `);
 
     try {
       const fortune = generatePersonalizedFortune(profile, date);
 
       if (dryRun) {
-        console.log('\n' + fortune.split('\n').map(l => '   ' + l).join('\n'));
-        console.log('   ' + '─'.repeat(50));
+        // 在 dry-run 下，正文依然仅写入个人 outbox，避免 stdout 串台
+        await sendMessage(userId, fortune, { dryRun: true });
+        console.log('✅ (dry-run 已写入 outbox)');
         successCount++;
       } else {
         const sent = await sendMessage(userId, fortune);
@@ -659,16 +664,15 @@ async function runPush({ dryRun = false, testUserId = null } = {}) {
       }
 
       logEntry.results.push({
-        userId,
-        name,
+        // 仅记录脱敏后的标识，避免日志文件被外部读取后泄露姓名/userId
+        userIdHash: require('crypto').createHash('sha256').update(String(userId)).digest('hex').slice(0, 8),
         status: dryRun ? 'dry-run' : (sent ? 'success' : 'failed')
       });
     } catch (e) {
       console.log(`❌ ${e.message}`);
       failCount++;
       logEntry.results.push({
-        userId,
-        name,
+        userIdHash: require('crypto').createHash('sha256').update(String(profile.userId || '')).digest('hex').slice(0, 8),
         status: 'error',
         error: e.message
       });

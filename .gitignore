@@ -33,6 +33,11 @@ Thumbs.db
 data/profiles/*.json
 !data/profiles/template.json
 
+# Per-user push outbox & log — personalized fortune content
+data/outbox/
+data/outbox-dryrun/
+data/push-log.json
+
 # Logs
 logs/
 *.log

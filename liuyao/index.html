@@ -1106,10 +1106,26 @@ function resolveApiBase(){
   return sel.trim().replace(/\/$/,'');
 }
 
-function isKnownEndpoint(base){
+/* 严格 HTTPS 校验：拒绝 http、IP 直连、localhost、内网域名 */
+function isStrictHttps(base){
   try{
     const u=new URL(base);
     if(u.protocol!=='https:') return false;
+    const host=u.hostname.toLowerCase();
+    if(host==='localhost'||host==='127.0.0.1'||host==='::1') return false;
+    // 简单 IPv4 / IPv6 字面值拦截
+    if(/^\d{1,3}(\.\d{1,3}){3}$/.test(host)) return false;
+    if(host.includes(':')) return false;
+    // 私网域名常见后缀（避免内网钓鱼）
+    if(/\.local$|\.internal$|\.lan$|\.intra$/.test(host)) return false;
+    return true;
+  }catch(e){ return false; }
+}
+
+function isKnownEndpoint(base){
+  if(!isStrictHttps(base)) return false;
+  try{
+    const u=new URL(base);
     return KNOWN_ENDPOINTS.some(known=>{
       const ku=new URL(known);
       return u.hostname===ku.hostname;
@@ -1125,10 +1141,23 @@ function askConsent(apiBase){
     const warn=document.getElementById('consentWarn');
     if(!apiBase){
       warn.textContent='⚠ 接口地址为空，无法发送。请取消并改用离线解卦，或填写可信地址。';
+    }else if(!isStrictHttps(apiBase)){
+      warn.textContent='⛔ 该地址不是合规的公网 HTTPS 地址（拒绝 http://、IP 直连、localhost、内网域名）。为保护您的密钥与隐私，雪儿不会发送数据，请取消并改填可信地址。';
     }else if(!isKnownEndpoint(apiBase)){
       warn.textContent='⚠ 该地址不在已知可信清单中。请确认这是您主动配置的、可信的服务器。继续将向其发送您的 API Key 与提问内容。';
     }else{
       warn.textContent='✓ 该地址为已知大模型供应商域名。';
+    }
+    // 当协议不合规时，禁用「确认发送」按钮，避免误点
+    const confirmBtn=document.getElementById('consentConfirm');
+    if(apiBase && !isStrictHttps(apiBase)){
+      confirmBtn.disabled=true;
+      confirmBtn.style.opacity='0.4';
+      confirmBtn.style.cursor='not-allowed';
+    }else{
+      confirmBtn.disabled=false;
+      confirmBtn.style.opacity='1';
+      confirmBtn.style.cursor='pointer';
     }
     mask.classList.add('visible');
     const cleanup=(v)=>{

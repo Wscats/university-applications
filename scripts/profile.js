@@ -9,6 +9,38 @@ const path = require('path');
 
 const PROFILES_DIR = path.join(__dirname, '../data/profiles');
 
+// 隐私控制：默认脚本输出脱敏，仅在调用者明确传入 --full 时才全量输出。
+// 这可以避免在共享终端/CI日志/cron邮件 中意外外露谁的八字、出生信息、家庭成员。
+const SHOW_FULL = process.argv.includes('--full');
+const SHOW_FULL_HINT = '\n   ⚠ 默认脱敏。如需访问完整信息（仅推荐在个人设备），请追加 --full 并确保未被日志采集。';
+
+function maskName(s) {
+  if (!s) return '';
+  if (s.length <= 1) return s + '*';
+  return s[0] + '*'.repeat(Math.max(1, s.length - 1));
+}
+function maskBazi(b) {
+  if (!b) return '?? ?? ?? ??';
+  // 只输出五行属性不外露干支原始值
+  const ZHI_ELEM = { '子':'水','丑':'土','寅':'木','卯':'木','辰':'土','巳':'火','午':'火','未':'土','申':'金','酉':'金','戌':'土','亥':'水' };
+  const cells = ['year','month','day','hour'].map(k => {
+    const v = (b[k] || '');
+    if (v.length < 2) return '—';
+    return ZHI_ELEM[v[1]] || '—';
+  });
+  return `已配置（五行序列：${cells.join('-')}）`;
+}
+function maskBirthDate(d) {
+  if (!d) return '';
+  // 仅保留年，隐藏月日
+  const m = String(d).match(/^(\d{4})/);
+  return m ? `${m[1]}-**-**` : '****';
+}
+function renderBazi(b) {
+  if (SHOW_FULL) return `${b?.year || '?'} ${b?.month || ''} ${b?.day || ''} ${b?.hour || ''}`;
+  return maskBazi(b);
+}
+
 // 确保目录存在
 if (!fs.existsSync(PROFILES_DIR)) {
   fs.mkdirSync(PROFILES_DIR, { recursive: true });
@@ -174,26 +206,26 @@ function listFamilyMembers(userId) {
   const { family } = profile;
   
   if (family?.spouse?.name && family.spouse.name !== '配偶') {
-    console.log(`  👫 配偶: ${family.spouse.name}`);
-    console.log(`     八字: ${family.spouse.bazi?.year || '?'} ${family.spouse.bazi?.month || ''} ${family.spouse.bazi?.day || ''} ${family.spouse.bazi?.hour || ''}`);
+    console.log(`  👫 配偶: ${SHOW_FULL ? family.spouse.name : maskName(family.spouse.name)}`);
+    console.log(`     八字: ${renderBazi(family.spouse.bazi)}`);
   }
   
   if (family?.father?.name && family.father.name !== '父亲') {
-    console.log(`  👨 父亲: ${family.father.name}`);
-    console.log(`     八字: ${family.father.bazi?.year || '?'} ${family.father.bazi?.month || ''} ${family.father.bazi?.day || ''} ${family.father.bazi?.hour || ''}`);
+    console.log(`  👨 父亲: ${SHOW_FULL ? family.father.name : maskName(family.father.name)}`);
+    console.log(`     八字: ${renderBazi(family.father.bazi)}`);
   }
   
   if (family?.mother?.name && family.mother.name !== '母亲') {
-    console.log(`  👩 母亲: ${family.mother.name}`);
-    console.log(`     八字: ${family.mother.bazi?.year || '?'} ${family.mother.bazi?.month || ''} ${family.mother.bazi?.day || ''} ${family.mother.bazi?.hour || ''}`);
+    console.log(`  👩 母亲: ${SHOW_FULL ? family.mother.name : maskName(family.mother.name)}`);
+    console.log(`     八字: ${renderBazi(family.mother.bazi)}`);
   }
   
   if (family?.children?.length > 0) {
     console.log(`  👶 子女 (${family.children.length}):`);
     family.children.forEach((child, i) => {
-      console.log(`     ${i + 1}. ${child.name} (${child.profile?.gender || '待定'})`);
-      console.log(`        出生: ${child.profile?.birthDate || '待录入'}`);
-      console.log(`        八字: ${child.bazi?.year || '?'} ${child.bazi?.month || ''} ${child.bazi?.day || ''} ${child.bazi?.hour || ''}`);
+      console.log(`     ${i + 1}. ${SHOW_FULL ? child.name : maskName(child.name)} (${child.profile?.gender || '待定'})`);
+      console.log(`        出生: ${SHOW_FULL ? (child.profile?.birthDate || '待录入') : maskBirthDate(child.profile?.birthDate)}`);
+      console.log(`        八字: ${renderBazi(child.bazi)}`);
     });
   }
   
@@ -214,24 +246,29 @@ function showProfile(userId) {
     return;
   }
   
-  console.log('\n📋 用户档案\n');
-  console.log(`ID: ${profile.userId}`);
-  console.log(`姓名: ${profile.name}`);
-  console.log(`出生: ${profile.profile?.birthDate} ${profile.profile?.birthTime}`);
-  console.log(`地点: ${profile.profile?.birthPlace}`);
-  console.log(`性别: ${profile.profile?.gender}`);
+  console.log('\n📋 用户档案' + (SHOW_FULL ? '' : '（默认脱敏）') + '\n');
+  console.log(`ID: ${SHOW_FULL ? profile.userId : maskName(profile.userId)}`);
+  console.log(`姓名: ${SHOW_FULL ? profile.name : maskName(profile.name)}`);
+  console.log(`出生: ${SHOW_FULL ? `${profile.profile?.birthDate || ''} ${profile.profile?.birthTime || ''}` : maskBirthDate(profile.profile?.birthDate)}`);
+  console.log(`地点: ${SHOW_FULL ? (profile.profile?.birthPlace || '') : (profile.profile?.birthPlace ? '已填写（已脱敏）' : '')}`);
+  console.log(`性别: ${profile.profile?.gender || ''}`);
   
   console.log('\n🧮 八字');
-  console.log(`  ${profile.bazi?.year} ${profile.bazi?.month} ${profile.bazi?.day} ${profile.bazi?.hour}`);
-  console.log(`  日主: ${profile.bazi?.dayStem}`);
-  console.log(`  生肖: ${profile.bazi?.zodiac}`);
+  console.log(`  ${renderBazi(profile.bazi)}`);
+  if (SHOW_FULL) {
+    console.log(`  日主: ${profile.bazi?.dayStem}`);
+    console.log(`  生肖: ${profile.bazi?.zodiac}`);
+  } else {
+    console.log(`  日主与生肖已隐藏（--full 可查看）`);
+  }
   
   if (profile.ziwei) {
     console.log('\n✨ 紫微');
-    console.log(`  命宫: ${profile.ziwei.mingGong}`);
-    console.log(`  命主: ${profile.ziwei.mingZhu}`);
+    console.log(`  命宫: ${SHOW_FULL ? profile.ziwei.mingGong : '已配置（脱敏）'}`);
+    if (SHOW_FULL) console.log(`  命主: ${profile.ziwei.mingZhu}`);
   }
   
+  if (!SHOW_FULL) console.log(SHOW_FULL_HINT);
   listFamilyMembers(userId);
 }
 
@@ -240,15 +277,20 @@ function showProfile(userId) {
  */
 function listProfiles() {
   const files = fs.readdirSync(PROFILES_DIR).filter(f => f.endsWith('.json'));
-  console.log('\n📋 用户列表\n');
+  console.log('\n📋 用户列表' + (SHOW_FULL ? '' : '（默认脱敏）') + '\n');
   
   files.forEach(f => {
     const userId = f.replace('.json', '');
     const data = loadProfile(userId);
-    console.log(`  ${userId} | ${data?.name || '未知'} | ${data?.profile?.birthDate || '未知'}`);
+    if (SHOW_FULL) {
+      console.log(`  ${userId} | ${data?.name || '未知'} | ${data?.profile?.birthDate || '未知'}`);
+    } else {
+      console.log(`  ${maskName(userId)} | ${maskName(data?.name || '未知')} | ${maskBirthDate(data?.profile?.birthDate)}`);
+    }
   });
   
   console.log(`\n共 ${files.length} 个用户\n`);
+  if (!SHOW_FULL) console.log(SHOW_FULL_HINT);
 }
 
 /**
