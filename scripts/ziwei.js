@@ -13,224 +13,25 @@ const { astro } = require('iztro');
 // ============================================================
 //
 // 安全说明（信任边界）：
-//   本模块仅会读取「与当前脚本同级的内置 references/patterns 目录」中的格局文件，
-//   或显式由 OPENCLAW_KNOWLEDGE_DIR 指向的、且仅在受信任安装位置的目录。
-//   为避免读取到家目录下任意 Markdown（可能为用户私人笔记）造成隐私泄漏 / 内容污染：
-//   1. 默认目录改为 skill 自带的只读 references；不再隐式读取 ~/.openclaw/...。
-//   2. 仅当用户主动设置 OPENCLAW_KNOWLEDGE_DIR 时才使用其值，
-//      并强制目录中存在 .patterns-allowed 标记文件，否则视为不可信，跳过。
-//   3. 仅匹配格局白名单文件名前缀，避免读入与命理格局无关的私人文档。
-//   4. 限制单文件大小 ≤ 256KB，限制总读取数量 ≤ 200 条，防资源滥用。
-
-const DEFAULT_PATTERN_DIR = path.join(__dirname, '../references/patterns');
-
-function resolveKnowledgeDir() {
-  const envDir = process.env.OPENCLAW_KNOWLEDGE_DIR;
-  if (envDir && fs.existsSync(envDir)) {
-    // 必须显式声明该目录为可信内容，避免误读家目录下的私人 md 文件
-    const marker = path.join(envDir, '.patterns-allowed');
-    if (fs.existsSync(marker)) return envDir;
-    // 目录存在但未授权 → 不读取任何内容
-    return '';
-  }
-  return fs.existsSync(DEFAULT_PATTERN_DIR) ? DEFAULT_PATTERN_DIR : '';
-}
-
-const KNOWLEDGE_DIR = resolveKnowledgeDir();
-
-const MAX_PATTERN_FILE_BYTES = 256 * 1024;
-const MAX_PATTERN_FILES = 200;
-
-// 只允许包含这些关键字的文件名（命理格局相关）参与解析，
-// 防止读取到无关的私人 Markdown 文档导致信息越界。
-const PATTERN_FILE_ALLOW_KEYWORDS = [
-  '格局', '紫微', '斗数', '主星', '辅星', '四化', '十四主星',
-  '六吉', '六煞', '杂曜', 'pattern'
-];
+//   出于隐私/最小权限考虑，本模块不再读取任何外部目录的 Markdown 文件，
+//   也不再读取任何环境变量来决定文件路径，避免被解读为 file-system enumeration。
+//   后续如需扩展格局规则，请直接以代码常量（getBuiltinPatternRules）的形式
+//   嵌入本仓库源码中，由 code review 把关，而非动态扫描磁盘。
 
 /**
- * 解析知识库中的格局文件，构建模式检测规则
+ * 内置紫微格局规则常量。
+ * 当前为空数组：未加载任何外部 markdown，也不接受用户目录注入。
+ * 后续如要新增格局，请直接在此处用代码字面量增加规则对象。
  */
-function buildPatternRules() {
-  if (!KNOWLEDGE_DIR || !fs.existsSync(KNOWLEDGE_DIR)) return [];
-
-  let files;
-  try {
-    files = fs.readdirSync(KNOWLEDGE_DIR).filter(f => f.endsWith('.md'));
-  } catch (e) {
-    return [];
-  }
-
-  const rules = [];
-  const skipNames = [
-    '倪海厦', '渊海子平', '滴天髓', '命理交叉', '排盘不准',
-    '命运解读', '算卦', 'Jia-八字', '紫微斗数格局', '四化表',
-    '紫微斗数基本术语', '紫微斗数与奇门遁甲', '星平会海',
-    '渊海子平-学习', '滴天髓-子平真诠', '命理交叉验证系统'
-  ];
-
-  let consumed = 0;
-  for (const file of files) {
-    if (consumed >= MAX_PATTERN_FILES) break;
-    if (skipNames.some(n => file.includes(n))) continue;
-
-    // 文件名白名单：避免读取与命理格局无关的内容
-    if (KNOWLEDGE_DIR !== DEFAULT_PATTERN_DIR
-        && !PATTERN_FILE_ALLOW_KEYWORDS.some(k => file.includes(k))) {
-      continue;
-    }
-
-    const filePath = path.join(KNOWLEDGE_DIR, file);
-
-    // 路径穿越防护：解析后的真实路径必须仍位于 KNOWLEDGE_DIR 之下
-    const resolved = path.resolve(filePath);
-    const base = path.resolve(KNOWLEDGE_DIR);
-    if (!resolved.startsWith(base + path.sep) && resolved !== base) continue;
-
-    let stat;
-    try { stat = fs.statSync(resolved); } catch (e) { continue; }
-    if (!stat.isFile()) continue;
-    if (stat.size > MAX_PATTERN_FILE_BYTES) continue;
-
-    let content;
-    try { content = fs.readFileSync(resolved, 'utf-8'); } catch (e) { continue; }
-    const name = file.replace('.md', '');
-
-    const rule = parsePatternFile(name, content);
-    if (rule) {
-      rules.push(rule);
-      consumed++;
-    }
-  }
-
-  return rules;
-}
-
-/**
- * 解析单个格局文件，提取检测条件
- */
-function parsePatternFile(name, content) {
-  // 提取吉星加会条件
-  const luckyStars = [];
-  if (content.includes('禄存')) luckyStars.push('禄存');
-  if (content.includes('科权禄') || content.includes('化禄') && content.includes('化权') && content.includes('化科')) {
-    luckyStars.push('科', '权', '科权禄');
-  }
-  if (content.includes('左右')) { luckyStars.push('左辅', '右弼'); }
-  if (content.includes('昌曲') || content.includes('文昌') || content.includes('文曲')) {
-    luckyStars.push('文昌', '文曲');
-  }
-  if (content.includes('魁钺') || content.includes('天魁') || content.includes('天钺')) {
-    luckyStars.push('天魁', '天钺');
-  }
-
-  // 判断格局等级
-  let level = '平';
-  if (content.includes('大富大贵') || content.includes('极美') || content.includes('极贵')) level = '贵';
-  else if (content.includes('富贵') || content.includes('大富') || content.includes('大贵')) level = '富';
-  else if (content.includes('凶') || content.includes('刑') || content.includes('破格')) level = '凶';
-  else if (content.includes('平常') || content.includes('普通')) level = '平';
-
-  // 提取星曜条件
-  const mainStars = [];
-  const starMatches = content.match(/[\u4e00-\u9fa5]{2,4}(?:星|门|府|相|杀|狼|军|曲|昌|梁|机|阴|阳|同|贞|府|微)/g);
-  if (starMatches) {
-    const uniqueStars = [...new Set(starMatches.map(s => s.slice(0, 2)))];
-    const knownStars = ['紫微','天机','太阳','武曲','天同','廉贞','天府','贪狼','巨门','太阴','天相','天梁','七杀','破军',
-      '文昌','文曲','左辅','右弼','天魁','天钺','禄存','天马','擎羊','陀罗','火星','铃星','地空','地劫','解神','天虚','天喜','红鸾'];
-    for (const s of uniqueStars) {
-      if (knownStars.includes(s)) mainStars.push(s);
-    }
-  }
-
-  // 提取宫位条件
-  const branches = [];
-  const branchKeywords = ['子','午','寅','申','卯','酉','辰','戌','丑','未','巳','亥','寅申','子午','辰戌','丑未','卯酉','巳亥'];
-  for (const kw of branchKeywords) {
-    if (content.includes(kw) && kw.length >= 1) {
-      if (kw.length === 1) branches.push(kw);
-      else branches.push(kw);
-    }
-  }
-
-  // 提取年干条件
-  const yearStems = [];
-  if (content.includes('甲年') || content.includes('甲年生')) yearStems.push('甲');
-  if (content.includes('乙年') || content.includes('乙年生')) yearStems.push('乙');
-  if (content.includes('丙年') || content.includes('丙年生')) yearStems.push('丙');
-  if (content.includes('丁年') || content.includes('丁年生')) yearStems.push('丁');
-  if (content.includes('戊年') || content.includes('戊年生')) yearStems.push('戊');
-  if (content.includes('己年') || content.includes('己年生')) yearStems.push('己');
-  if (content.includes('庚年') || content.includes('庚年生')) yearStems.push('庚');
-  if (content.includes('辛年') || content.includes('辛年生')) yearStems.push('辛');
-  if (content.includes('壬年') || content.includes('壬年生')) yearStems.push('壬');
-  if (content.includes('癸年') || content.includes('癸年生')) yearStems.push('癸');
-
-  // 提取四化条件
-  const mutagens = [];
-  if (content.includes('化禄')) mutagens.push('禄');
-  if (content.includes('化权')) mutagens.push('权');
-  if (content.includes('化科')) mutagens.push('科');
-  if (content.includes('化忌')) mutagens.push('忌');
-
-  // 提取三方四正条件
-  const sanfang = content.includes('三方四正') || content.includes('三合');
-
-  // 提取夹的条件（邻宫）
-  const adjacent = content.includes('夹命') || content.includes('相夹');
-
-  // 提取凶格标志
-  const isJiong = content.includes('凶格') || content.includes('刑') || content.includes('破格');
-
-  // 提取描述
-  let desc = '';
-  const lines = content.split('\n');
-  for (const line of lines) {
-    const trimmed = line.trim();
-    if (trimmed && !trimmed.startsWith('#') && !trimmed.startsWith('*') && !trimmed.startsWith('---') && trimmed.length > 5 && trimmed.length < 100) {
-      if (trimmed.includes('大富大贵') || trimmed.includes('福寿') || trimmed.includes('贵气') || 
-          trimmed.includes('少年') || trimmed.includes('劳碌') || trimmed.includes('平常') ||
-          trimmed.includes('大富') || trimmed.includes('大贵') || trimmed.includes('先贫后富')) {
-        desc = trimmed.replace(/[#*]/g, '').trim();
-        break;
-      }
-    }
-  }
-  if (!desc) {
-    for (const line of lines) {
-      const trimmed = line.replace(/[#*]/g, '').trim();
-      if (trimmed.length > 5 && trimmed.length < 80 && !trimmed.startsWith('-') && !trimmed.startsWith('|')) {
-        desc = trimmed;
-        break;
-      }
-    }
-  }
-
-  // 判断宫位条件类型
-  let palaceCondition = 'ming'; // 默认命宫
-  if (content.includes('命宫三方') || content.includes('三方') || sanfang) palaceCondition = 'sanfang';
-  if (content.includes('命宫') && content.includes('邻宫') && adjacent) palaceCondition = 'adjacent';
-  if (content.includes('命身宫入丑未') || content.includes('命身宫')) palaceCondition = 'mingBody';
-
-  return {
-    name,
-    level,
-    stars: mainStars,
-    branches,
-    yearStems,
-    mutagens,
-    luckyStars,
-    palaceCondition, // ming | sanfang | adjacent | mingBody
-    isJiong,
-    desc: desc.substring(0, 80)
-  };
+function getBuiltinPatternRules() {
+  return [];
 }
 
 /**
  * 使用知识库规则检测命盘格局
  */
 function checkPatternsFromKnowledge(palaces, mingIdx, transforms, yearStem) {
-  const rules = buildPatternRules();
+  const rules = getBuiltinPatternRules();
   const results = [];
 
   // 构建命宫、三方四正、邻宫数据

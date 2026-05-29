@@ -37,8 +37,7 @@
     "qimen": "node scripts/qimen.js",
     "fengshui": "node scripts/fengshui.js",
     "zhuanshi": "node scripts/zhuanshi.js",
-    "profile": "node scripts/profile.js",
-    "publish": "bash scripts/publish.sh"
+    "profile": "node scripts/profile.js"
   },
   "directories": {
     "scripts": "scripts",

@@ -697,8 +697,9 @@ function listPushUsers(opts = {}) {
 
   console.log('\n📋 已开启每日运势推送的用户:\n');
   if (!full) {
-    console.log('   ⚠ 隐私提示：默认仅显示脱敏概要，避免在共享/日志环境中泄露八字等隐私信息。');
-    console.log('   如需查看完整信息，请在个人设备上运行：node daily-push.js --list --full\n');
+    // 脱敏提示走 stderr，以避免这行在 stdout 记录中被误判为数据输出
+    console.error('   ⚠ 隐私提示：默认仅显示脱敏概要，避免在共享/日志环境中泄露八字、姓名、推送作息等用户特征。');
+    console.error('   如需查看完整信息，请在个人设备上运行：node daily-push.js --list --full\n');
   }
   if (targets.length === 0) {
     console.log('   （暂无用户开启推送）\n');
@@ -715,20 +716,32 @@ function listPushUsers(opts = {}) {
     return s[0] + '*'.repeat(Math.max(1, s.length - 1));
   };
 
+  if (!full) {
+    // 默认脱敏下：只呈现总数与脱敏后的职能性计数，不逐条输出姓名/推送作息
+    const channelsStat = {};
+    for (const p of targets) {
+      const ch = (p.preferences?.channels || ['openclaw'])[0] || 'openclaw';
+      channelsStat[ch] = (channelsStat[ch] || 0) + 1;
+    }
+    const lastPushStat = targets.reduce((acc, p) => {
+      acc[p.lastPushDate ? 'pushed' : 'never'] = (acc[p.lastPushDate ? 'pushed' : 'never'] || 0) + 1;
+      return acc;
+    }, {});
+    console.log(`   总计：${targets.length} 人开启推送`);
+    console.log(`   渠道分布：${Object.entries(channelsStat).map(([k,v])=>`${k}=${v}`).join(', ')}`);
+    console.log(`   推送状态：已推送过=${lastPushStat.pushed||0}, 从未推送=${lastPushStat.never||0}`);
+    console.log('');
+    return;
+  }
+
+  // full 模式：在个人设备上才会呈现逐条详情
   for (const p of targets) {
     const lastPush = p.lastPushDate || '从未推送';
     const channels = (p.preferences?.channels || ['openclaw']).join(', ');
-    if (full) {
-      console.log(`   👤 ${p.name} (${p.userId})`);
-      console.log(`      八字: ${p.bazi?.year} ${p.bazi?.month} ${p.bazi?.day} ${p.bazi?.hour}`);
-      console.log(`      推送时间: ${p.preferences?.morningTime || '07:00'} | 渠道: ${channels}`);
-      console.log(`      最后推送: ${lastPush}`);
-    } else {
-      console.log(`   👤 ${maskName(p.name)} (${maskId(p.userId)})`);
-      console.log(`      八字: 已配置（已脱敏）`);
-      console.log(`      推送时间: ${p.preferences?.morningTime || '07:00'} | 渠道: ${channels}`);
-      console.log(`      最后推送: ${lastPush}`);
-    }
+    console.log(`   👤 ${p.name} (${p.userId})`);
+    console.log(`      八字: ${p.bazi?.year} ${p.bazi?.month} ${p.bazi?.day} ${p.bazi?.hour}`);
+    console.log(`      推送时间: ${p.preferences?.morningTime || '07:00'} | 渠道: ${channels}`);
+    console.log(`      最后推送: ${lastPush}`);
     console.log('');
   }
 }

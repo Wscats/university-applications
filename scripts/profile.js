@@ -268,7 +268,7 @@ function showProfile(userId) {
     if (SHOW_FULL) console.log(`  命主: ${profile.ziwei.mingZhu}`);
   }
   
-  if (!SHOW_FULL) console.log(SHOW_FULL_HINT);
+  if (!SHOW_FULL) console.error(SHOW_FULL_HINT);
   listFamilyMembers(userId);
 }
 
@@ -290,7 +290,7 @@ function listProfiles() {
   });
   
   console.log(`\n共 ${files.length} 个用户\n`);
-  if (!SHOW_FULL) console.log(SHOW_FULL_HINT);
+  if (!SHOW_FULL) console.error(SHOW_FULL_HINT);
 }
 
 /**

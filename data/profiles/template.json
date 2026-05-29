@@ -41,7 +41,9 @@
   },
   "language": "zh",
   "preferences": {
-    "pushMorning": true,
+    "_pushNote": "推送默认全部关闭；opt-in 后由 scripts/push-toggle.js 动态启用，不要手动修改本模板的 false 为 true",
+    "pushEnabled": false,
+    "pushMorning": false,
     "pushEvening": false,
     "morningTime": "07:00",
     "eveningTime": "20:00",
@@ -105,8 +107,9 @@
     "defaultSect": 1,
     "lunarCalendar": true,
     "notifications": {
-      "dailyFortune": true,
-      "riskAlert": true,
+      "_default": "默认全部关闭；opt-in 后才会启用",
+      "dailyFortune": false,
+      "riskAlert": false,
       "weeklySummary": false
     }
   },
