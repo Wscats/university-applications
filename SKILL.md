@@ -1,18 +1,22 @@
 ---
 name: 命理大师
 description: |
-  全体系命理大师——融合八字/四柱、紫微斗数、奇门遁甲、六爻、梅花易数、塔罗、西方星盘、
-  数字命理、九宫飞星风水、择时择吉于一体的综合命理技能。支持用户注册与档案管理、
-  每日运程自动推送、交互式六爻占卜界面、九宫飞星计算脚本、HTML 报告生成。
+  【命理大师 / Fortune Master】全体系命理大师——融合八字/四柱、紫微斗数、奇门遁甲、六爻、梅花易数、塔罗、西方星盘、
+  数字命理、九宫飞星风水、择时择吉于一体的综合命理技能。支持用户注册与档案管理（本地）、
+  可选的每日运程推送（默认关闭）、交互式六爻占卜界面、九宫飞星计算脚本、HTML 报告生成。
   自动识别体系与资料完整度，按 S/A/B/C 四级精度输出解读。
-  触发词：算命、八字、紫微、奇门遁甲、六爻、梅花易数、塔罗、星盘、风水、飞星、
-  今日运势、每日运程、占卜、合婚、择吉、数字命理、生命灵数。
-version: 1.1.4
-keywords: 算命, 八字, 紫微斗数, 奇门遁甲, 六爻, 梅花易数, 塔罗, 星盘, 风水, 九宫飞星, 今日运势, 每日运程, 占卜, 合婚, 择吉, 数字命理, 生命灵数, fortune telling, BaZi, ZiWei, QiMen, Tarot, astrology, feng shui, I Ching, numerology, daily horoscope
+  触发场景（需明确与命理/占卜/风水/吉凶相关，不覆盖医疗/法律/金融等专业什都）：
+    - 明确表达「占卜/起卦/插牌/排盘」意图；
+    - 明确提及具体体系名称（八字、紫微斗数、奇门遁甲、六爻、梅花易数、塔罗、星盘/占星术、纳音生肖、九宫飞星）；
+    - 明确表达「今日/本周/近期运势」、「择吉择时」、「八字合婚」、「生命灵数/数字命理」等明确主题。
+    注意：仅为文化/爱好参考，不是医疗、法律、心理、财务、婚姻专业建议；遇重大决策请咨询专业人士。
 metadata:
+  displayName: "命理大师 / Fortune Master"
+  version: 1.1.5
+  keywords: 算命, 八字, 紫微斗数, 奇门遁甲, 六爻, 梅花易数, 塔罗, 星盘, 风水, 九宫飞星, 今日运势, 每日运程, 占卜, 合婚, 择吉, 数字命理, 生命灵数, fortune telling, BaZi, ZiWei, QiMen, Tarot, astrology, feng shui, I Ching, numerology, daily horoscope
   openclaw:
     emoji: "☯️"
-    skillKey: "fortune-master-ultimate"
+    skillKey: "university-applications"
     runtime:
       node: ">=18"
       python3: true
@@ -27,9 +31,13 @@ metadata:
       network:
         default: none
         optional:
-          - feature: "liuyao HTML LLM divination (user-initiated, in-browser)"
-            endpoint: "user-configured (default placeholder: https://api.openai.com/v1)"
-            data-sent: "only the hexagram and the user's typed question"
+          - feature: "liuyao HTML LLM divination (user-initiated, in-browser, OFF by default)"
+            allowed-endpoints:
+              - "https://api.openai.com"
+              - "https://api.anthropic.com"
+              - "https://api.deepseek.com"
+            custom-endpoint: "only after explicit in-UI consent dialog; HTTPS-only, no IP/localhost auto-trust"
+            data-sent: "only the hexagram and the user's typed question; no profile, no env vars, no file paths"
             credential: "user-provided LLM API key, entered at runtime, stored in browser localStorage only"
           - feature: "liuyao HTML Google Fonts (commented out by default)"
             endpoint: "https://fonts.googleapis.com"
