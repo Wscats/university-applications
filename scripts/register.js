@@ -386,17 +386,39 @@ console.log('');
 console.log(`📁 档案已保存：${REG_SHOW_FULL ? filePath : path.relative(process.cwd(), filePath)}`);
 console.log('');
 // 自动开启推送（如果指定了 --push 参数）
+//
+// finding-fix (v1.1.9): 注册流程默认**不**应隐式 opt-in 推送，
+// 操作员/自动化可能在用户不知情下让其进入定期推送循环。
+// 因此 --push 现在被视为**有副作用的危险开关**：必须再显式追加 --i-consent
+// 表示「我就是该用户本人，明确同意立即开启每日运势推送」，
+// 否则即便传了 --push 也只会打印提示而**不**真正开启。
 const pushIdx = args.indexOf('--push');
 if (pushIdx !== -1) {
-  const channel = args[args.indexOf('--channel') + 1] || 'openclaw';
-  const morning = args[args.indexOf('--morning') + 1] || '08:00';
-  const evening = args[args.indexOf('--evening') + 1] || '20:00';
-  console.log('⏳ 正在开启每日推送...');
-  try {
-    const { enablePush } = require('./push-toggle');
-    enablePush(userId, { morning, evening, channel });
-  } catch (e) {
-    console.error('推送开启失败:', e.message);
+  const explicitConsent = args.includes('--i-consent');
+  if (!explicitConsent) {
+    console.error('');
+    console.error('❌ 拒绝在注册时静默开启每日运势推送。');
+    console.error('   --push 是有副作用的开关：会创建定时任务并写入 pushOptInAt 时间戳。');
+    console.error('   若你确认是用户本人主动注册并希望同步开启推送，请在命令最后追加：');
+    console.error('     --i-consent');
+    console.error('   或者注册完成后让用户自行运行：');
+    console.error(`     node scripts/push-toggle.js on ${userId}`);
+    console.error('');
+  } else {
+    const safeArg = (flag, fallback) => {
+      const idx = args.indexOf(flag);
+      return (idx !== -1 && args[idx + 1]) ? args[idx + 1] : fallback;
+    };
+    const channel = safeArg('--channel', 'openclaw');
+    const morning = safeArg('--morning', '08:00');
+    const evening = safeArg('--evening', '20:00');
+    console.log('⏳ 正在开启每日推送（已确认用户本人 --i-consent）...');
+    try {
+      const { enablePush } = require('./push-toggle');
+      enablePush(userId, { morning, evening, channel });
+    } catch (e) {
+      console.error('推送开启失败:', e.message);
+    }
   }
 } else {
   console.log('💡 提示：运行以下命令开启每日运程推送：');

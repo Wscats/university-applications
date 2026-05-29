@@ -11,6 +11,15 @@ const PROFILES_DIR = path.join(__dirname, '../data/profiles');
 
 /**
  * 加载用户档案
+ *
+ * finding-fix (v1.1.9): 仅凭 userId 读任意资料属于未鉴权访问，
+ * 这里未设计作为服务体跳板，所以采取「限制运行上下文」策略：
+ * - 只允许在 require.main === module 的 CLI 入口使用 userId 加载本地档案；
+ * - CLI 下会在调用 loadProfile 前要求「双方 userId 中的主调用者**为本人**」，
+ *   有以下任一表示同意：
+ *     1) --i-am <userId> 明确声明本人身份，且 <userId> 是双方之一；
+ *     2) 或者双方都足跟同一个 `OPENCLAW_OWNER_ID` 环境变量主调者。
+ *   否则拒绝，防止处理别人的出生信息 / 八字 / 姓名。
  */
 function loadProfile(userId) {
   const filePath = path.join(PROFILES_DIR, `${userId}.json`);
@@ -366,12 +375,18 @@ if (args.length < 2) {
 💕 合婚分析
 
 用法:
-  node marriage.js <userId1> <userId2>
+  node marriage.js <userId1> <userId2> [--i-am <本人的 userId>]
   node marriage.js <name1> <bazi1> <name2> <bazi2>
 
 示例:
-  node marriage.js 111111 222222
+  node marriage.js 111111 222222 --i-am 111111
   node marriage.js 张三 "甲子 乙丑 丙寅 丁卯" 李四 "庚午 辛巳 庚辰 癸未"
+
+说明:
+  - “从档案加载”模式读取本机 data/profiles/<userId>.json，包含姓名/出生/八字等个人信息。
+  - 为避免越权访问别人的档案，CLI 需要在双 userId 调用下补充 --i-am <userId>
+    明确表示调用者是双方之一本人；或者设置环境变量 OPENCLAW_OWNER_ID=<userId>。
+  - “直接输入八字”模式（4 参）不访问本机档案，无需授权。
 `);
   process.exit(1);
 }
@@ -379,26 +394,63 @@ if (args.length < 2) {
 let name1, bazi1, name2, bazi2;
 
 // 判断输入模式：2个参数=从档案加载，4个参数=直接输入
-if (args.length === 2) {
-  const profile1 = loadProfile(args[0]);
-  const profile2 = loadProfile(args[1]);
-  
+function parseUserIdArgs(rawArgs) {
+  const positional = [];
+  let claimedSelf = null;
+  for (let i = 0; i < rawArgs.length; i++) {
+    if (rawArgs[i] === '--i-am' && rawArgs[i + 1]) {
+      claimedSelf = rawArgs[i + 1];
+      i++;
+    } else if (!rawArgs[i].startsWith('--')) {
+      positional.push(rawArgs[i]);
+    }
+  }
+  return { positional, claimedSelf };
+}
+
+const parsed = parseUserIdArgs(args);
+
+if (parsed.positional.length === 2) {
+  const [u1, u2] = parsed.positional;
+  const ownerEnv = process.env.OPENCLAW_OWNER_ID || '';
+  const claimedSelf = parsed.claimedSelf;
+
+  // 鉴权：双方之一必须是调用者本人
+  const ownerCandidate = claimedSelf || ownerEnv;
+  if (!ownerCandidate) {
+    console.error('❌ 拒绝读取他人档案。请以双方之一本人身份运行，请补上 --i-am <你的 userId>，');
+    console.error('   或设置环境变量 OPENCLAW_OWNER_ID=<你的 userId>。');
+    console.error('   若主叫不是任一一方，请改用“直接输入八字”模式，避免读取本地档案。');
+    process.exit(1);
+  }
+  if (ownerCandidate !== u1 && ownerCandidate !== u2) {
+    console.error(`❌ 拒绝读取他人档案：主调用者 (${ownerCandidate}) 不是双方 (${u1}, ${u2}) 之一。`);
+    console.error('   请改用“直接输入八字”模式，避免读取本地档案。');
+    process.exit(1);
+  }
+
+  const profile1 = loadProfile(u1);
+  const profile2 = loadProfile(u2);
+
   if (!profile1 || !profile2) {
     console.log('❌ 未找到用户档案');
     process.exit(1);
   }
-  
+
   name1 = profile1.name;
   name2 = profile2.name;
   bazi1 = profile1.bazi.year + ' ' + profile1.bazi.month + ' ' + profile1.bazi.day + ' ' + profile1.bazi.hour;
   bazi2 = profile2.bazi.year + ' ' + profile2.bazi.month + ' ' + profile2.bazi.day + ' ' + profile2.bazi.hour;
-  
-  console.log('📋 从档案加载\n');
+
+  console.log(`📋 从档案加载（以 ${ownerCandidate} 为本人身份）\n`);
+} else if (parsed.positional.length === 4) {
+  name1 = parsed.positional[0];
+  bazi1 = parsed.positional[1];
+  name2 = parsed.positional[2];
+  bazi2 = parsed.positional[3];
 } else {
-  name1 = args[0];
-  bazi1 = args[1];
-  name2 = args[2];
-  bazi2 = args[3];
+  console.error('❌ 参数个数不正确：需 2（双 userId）或 4（姓名/八字×2）。运行 node marriage.js 查看用法。');
+  process.exit(1);
 }
 
 console.log(generateReport(name1, bazi1, name2, bazi2));

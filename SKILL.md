@@ -12,7 +12,7 @@ description: |
     注意：仅为文化/爱好参考，不是医疗、法律、心理、财务、婚姻专业建议；遇重大决策请咨询专业人士。
 metadata:
   displayName: "命理大师"
-  version: 1.1.8
+  version: 1.1.9
   keywords: 八字, 紫微斗数, 奇门遁甲, 六爻, 梅花易数, 塔罗, 星盘, 九宫飞星, 今日运势, 每日运程, 合婚, 择吉, 生命灵数, BaZi, ZiWei, QiMen, Tarot, feng shui, I Ching, numerology, daily horoscope
   # 触发关键词收紧：1.1.8 移除「算命 / 占卜 / 命理 / 数字命理 / fortune telling / astrology」等过宽泛词，
   # 避免在用户未明确要求占卜的对话中误激活本 skill；仅在明确出现具体体系名称或具体主题时才被触发。
@@ -288,8 +288,10 @@ node "{baseDir}/scripts/daily-push.js" --dry-run
 node "{baseDir}/scripts/daily-push.js" --test <userId>
 node "{baseDir}/scripts/push-toggle.js" on|off|status <userId>
 
-# 偏好追踪
-node "{baseDir}/scripts/preference-tracker.js" record <userId> <topic> explicit_query|topic_drill
+# 偏好追踪（默认关闭，需显式 opt-in）
+node "{baseDir}/scripts/preference-tracker.js" opt-in  <userId>
+node "{baseDir}/scripts/preference-tracker.js" opt-out <userId>
+node "{baseDir}/scripts/preference-tracker.js" record  <userId> <topic> explicit_query|topic_drill
 node "{baseDir}/scripts/preference-tracker.js" weights|top <userId> [N]
 ```
 
@@ -403,7 +405,7 @@ liuyao/                       # 六爻交互界面
 建议：
 - 只在确实需要多体系交叉验证时才录入家庭成员八字；不需要时留空即可。
 - 定期运行 `profile.js show` 审查已留存的数据，按需 `delete` 清理。
-- `interactionLog` 仅用于本地偏好学习，可随时手动从 JSON 中清空。
+- `interactionLog` 默认**不写入**：必须先运行 `node scripts/preference-tracker.js opt-in <userId>` 才会启用偏好学习；opt-out 会一次性清空已有记录并关闭后续写入。
 
 ### 🌐 可选网络用途（透明披露）
 

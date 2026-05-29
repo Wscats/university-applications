@@ -664,7 +664,11 @@
 
   <!-- API配置 -->
   <details class="api-config card" id="apiConfig">
-    <summary>⚙ 大模型配置（雪儿借天机推演，展开设置）</summary>
+    <summary>⚙ 大模型解卦（可选 · ⚠ 启用后会把卦象与问题发往第三方 LLM）</summary>
+    <div class="cfg-row" style="background:rgba(255,200,80,0.08);border:1px solid rgba(255,200,80,0.45);padding:8px 10px;border-radius:8px;color:#ffd58a;font-size:12.5px;line-height:1.55;">
+      <strong>⚠ 启用前请知悉：</strong>这是**可选功能**，默认不启用；若您填写 API Key 并触发解卦，浏览器会把<strong>卦象与您输入的问题</strong>通过 HTTPS 直接发送到下方所选接口，并使用您的 API Key 鉴权。<br/>
+      若您只想本地解卦或不希望任何外发请求，请保持本配置区<strong>不展开、不填写 Key</strong>，下方解卦按钮会自动走「离线兜底解卦」路径。
+    </div>
     <div class="cfg-row">
       <label>API Key：</label>
       <!-- NOTE: value is entered by the user at runtime, stored only in browser localStorage; no key is bundled in this file. -->
@@ -676,7 +680,7 @@
         <option value="https://api.openai.com/v1">OpenAI 官方 (api.openai.com)</option>
         <option value="https://api.anthropic.com/v1">Anthropic 官方 (api.anthropic.com)</option>
         <option value="https://api.deepseek.com/v1">DeepSeek 官方 (api.deepseek.com)</option>
-        <option value="__custom__">自定义（仅在确认可信时使用）</option>
+        <option value="__custom__">⚠ 自定义（高风险 · 仅在确认服务方完全可信时使用）</option>
       </select>
     </div>
     <div class="cfg-row" id="customBaseRow" style="display:none">

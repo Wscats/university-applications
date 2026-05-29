@@ -91,9 +91,14 @@ function _sortedTopics(weights) {
 /**
  * 记录一次互动
  *
- * 隐私披露（与 v1.1.8 起的 finding 修复一致）：
- * - 调用方（Agent / push 流程）必须先确保用户对「记录互动 → 用于偏好学习」是知情且同意的。
- *   推荐做法：第一次记录前在终端 / UI 中向用户读出本说明并要求显式 yes。
+ * 隐私披露（v1.1.9 加强）：
+ * - 本函数仅在用户在 profile.preferences 中显式 opt-in 后才会写入。
+ *   必须同时满足：
+ *     - profile.preferences.allowPreferenceLearning === true
+ *     - profile.preferences.preferenceLearningOptInAt 为 ISO 时间戳
+ *   如果任一条件不满足，本函数返回 false 且**不**写入任何 interactionLog。
+ * - 调用方可以运行 CLI: `node preference-tracker.js opt-in <userId>` 来开启；
+ *   并以 `node preference-tracker.js opt-out <userId>` 随时关闭且清空日志。
  * - 写入位置：data/profiles/<userId>.json 的 interactionLog 字段（**仅本地**，不上传）。
  * - 留存策略：滚动保留最近 MAX_LOG_SIZE 条，超出后**永久丢弃最旧记录**；
  *   也可以随时通过 `node scripts/profile.js delete <userId>` 整体清空，
@@ -106,6 +111,13 @@ function recordInteraction(userId, topic, context = 'explicit_query') {
   const profile = loadProfile(userId);
   if (!profile) return false;
   if (!TOPICS.includes(topic)) return false;
+
+  // 默认关闭：如果用户未显式 opt-in，本函数不进行任何写入
+  // （这是实现层隔离，不是允许会话余颂静默采集。）
+  const allowed = !!(profile.preferences
+    && profile.preferences.allowPreferenceLearning === true
+    && profile.preferences.preferenceLearningOptInAt);
+  if (!allowed) return false;
 
   if (!profile.interactionLog) profile.interactionLog = [];
 
@@ -127,6 +139,34 @@ function recordInteraction(userId, topic, context = 'explicit_query') {
   if (!profile.preferences) profile.preferences = {};
   profile.preferences.focusAreas = top.length > 0 ? top : DEFAULT_FOCUS;
 
+  saveProfile(userId, profile);
+  return true;
+}
+
+/**
+ * 显式 opt-in 偏好学习
+ */
+function optInPreferenceLearning(userId) {
+  const profile = loadProfile(userId);
+  if (!profile) return false;
+  if (!profile.preferences) profile.preferences = {};
+  profile.preferences.allowPreferenceLearning = true;
+  profile.preferences.preferenceLearningOptInAt = new Date().toISOString();
+  saveProfile(userId, profile);
+  return true;
+}
+
+/**
+ * opt-out：关闭偏好学习并清空已有历史
+ */
+function optOutPreferenceLearning(userId) {
+  const profile = loadProfile(userId);
+  if (!profile) return false;
+  if (!profile.preferences) profile.preferences = {};
+  profile.preferences.allowPreferenceLearning = false;
+  profile.preferences.preferenceLearningOptInAt = null;
+  profile.interactionLog = [];
+  profile.preferences.focusAreas = DEFAULT_FOCUS;
   saveProfile(userId, profile);
   return true;
 }
@@ -161,7 +201,7 @@ function getTopTopics(userId, n = 3) {
     .map(({ topic }) => topic);
 }
 
-module.exports = { recordInteraction, getWeights, getTopTopics, TOPICS };
+module.exports = { recordInteraction, getWeights, getTopTopics, optInPreferenceLearning, optOutPreferenceLearning, TOPICS };
 
 // ─────────────────────────────────────────────
 // 命令行入口（供 Agent 调用）
@@ -175,27 +215,58 @@ if (require.main === module) {
 🧠 用户偏好追踪器
 
 用法:
-  node preference-tracker.js record <userId> <topic> [context]
+  node preference-tracker.js opt-in  <userId>          # 启用偏好学习（需本人同意）
+  node preference-tracker.js opt-out <userId>          # 关闭偏好学习并清空互动日志
+  node preference-tracker.js record  <userId> <topic> [context]
   node preference-tracker.js weights <userId>
-  node preference-tracker.js top <userId> [n]
+  node preference-tracker.js top     <userId> [n]
+
+说明:
+  - record 仅在 profile.preferences.allowPreferenceLearning === true 且记录了 opt-in 时间戳后才会写入。
+  - opt-out 后，interactionLog 会被一次性清空，focusAreas 回退到默认值。
 
 topic 可选: ${TOPICS.join(' | ')}
 context 可选: explicit_query | topic_drill | morning_push | evening_push
 
 示例:
+  node preference-tracker.js opt-in 123456
   node preference-tracker.js record 123456 财运 explicit_query
-  node preference-tracker.js weights 123456
-  node preference-tracker.js top 123456 3
+  node preference-tracker.js opt-out 123456
 `);
     process.exit(1);
   }
 
   switch (cmd) {
+    case 'opt-in': {
+      const ok = optInPreferenceLearning(userId);
+      if (ok) {
+        console.log(JSON.stringify({ success: true, userId, allowPreferenceLearning: true, action: 'opt-in' }));
+      } else {
+        console.error(`❌ 用户不存在或未初始化: ${userId}`);
+        process.exit(1);
+      }
+      break;
+    }
+    case 'opt-out': {
+      const ok = optOutPreferenceLearning(userId);
+      if (ok) {
+        console.log(JSON.stringify({ success: true, userId, allowPreferenceLearning: false, action: 'opt-out', interactionLogCleared: true }));
+      } else {
+        console.error(`❌ 用户不存在: ${userId}`);
+        process.exit(1);
+      }
+      break;
+    }
     case 'record': {
       const [topic, context = 'explicit_query'] = rest;
       if (!topic) { console.error('缺少 topic 参数'); process.exit(1); }
       const ok = recordInteraction(userId, topic, context);
-      console.log(JSON.stringify({ success: ok, userId, topic, context }));
+      if (!ok) {
+        // 给出明确提示，避免调用方静默以为写入成功
+        console.log(JSON.stringify({ success: false, userId, topic, context, reason: 'profile-missing-or-not-opted-in' }));
+      } else {
+        console.log(JSON.stringify({ success: true, userId, topic, context }));
+      }
       break;
     }
     case 'weights': {

@@ -6,8 +6,11 @@
  * 用法:
  *   node daily-push.js                  # 推送今日运势给所有已开启的用户
  *   node daily-push.js --dry-run       # 模拟推送（不实际发送）
- *   node daily-push.js --test <userId> # 测试推送指定用户
- *   node daily-push.js --list          # 列出所有已开启推送的用户
+ *   node daily-push.js --test <userId> # **仅允许 dry-run 上下文**下作为调试工具使用，
+ *                                       默认拒绝未 opt-in 用户；
+ *                                       如需跳过 opt-in 检查，请同时传 --dry-run 可看运算验证，
+ *                                       仅在用户本人调试自己的推送时追加 --i-am-the-user 才会走正式发送。
+ *   node daily-push.js --list          # 列出所有已开启推送的用户（仅聚合统计）
  */
 
 const fs = require('fs');
@@ -632,7 +635,7 @@ function appendLog(entry) {
 // 主推送流程
 // ============================================================
 
-async function runPush({ dryRun = false, testUserId = null } = {}) {
+async function runPush({ dryRun = false, testUserId = null, testUserConsent = false } = {}) {
   const date = new Date();
   const dateStr = date.toISOString().split('T')[0];
   const logEntry = {
@@ -650,13 +653,30 @@ async function runPush({ dryRun = false, testUserId = null } = {}) {
 
   if (testUserId) {
     const testProfile = allProfiles.find(p => p.userId === testUserId);
-    if (testProfile) {
-      targets = [testProfile];
-      console.log(`   📋 测试模式: 仅推送给 ${testUserId}\n`);
-    } else {
+    if (!testProfile) {
       console.log(`   ❌ 测试用户不存在: ${testUserId}`);
       return;
     }
+
+    // 重点：v1.1.9 起，--test 不再静默绕过 opt-in 检查，避免给从未同意推送的用户写入个人运势。
+    const optedIn = !!(testProfile.preferences && testProfile.preferences.pushEnabled && testProfile.preferences.pushOptInAt);
+    if (!optedIn) {
+      if (!dryRun && !testUserConsent) {
+        console.error('   ❌ 拒绝：--test 指定的用户未启动推送或未记录 pushOptInAt。');
+        console.error('       调试请使用 --dry-run （仅验算，不交付、不落盘），或者：');
+        console.error('         1) 让用户运行 node scripts/push-toggle.js on <userId> 以显式 opt-in；');
+        console.error('         2) 或仅在用户本人调试自己的推送时追加 --i-am-the-user 明确表示同意。');
+        return;
+      }
+      if (dryRun) {
+        console.log(`   ⚠️  测试用户 ${testUserId} 未 opt-in 推送；dry-run 模式仅验算不交付。`);
+      } else {
+        console.log(`   ⚠️  测试用户 ${testUserId} 未 opt-in，但已传入 --i-am-the-user 表示本人同意；这一次特例交付。`);
+      }
+    }
+
+    targets = [testProfile];
+    console.log(`   📋 测试模式: 仅推送给 ${testUserId}\n`);
   }
 
   console.log(`   📋 共 ${targets.length} 个用户开启推送\n`);
@@ -765,14 +785,17 @@ async function main() {
     return;
   }
 
-  if (args.includes('--dry-run') || args.includes('-d')) {
-    await runPush({ dryRun: true });
+  // --test 必须先于 --dry-run 处理，以便 --dry-run --test <userId> 走单用户路径
+  const testIdx = args.indexOf('--test');
+  if (testIdx !== -1 && args[testIdx + 1]) {
+    const testUserConsent = args.includes('--i-am-the-user');
+    const dryFlag = args.includes('--dry-run') || args.includes('-d');
+    await runPush({ dryRun: dryFlag, testUserId: args[testIdx + 1], testUserConsent });
     return;
   }
 
-  const testIdx = args.indexOf('--test');
-  if (testIdx !== -1 && args[testIdx + 1]) {
-    await runPush({ testUserId: args[testIdx + 1] });
+  if (args.includes('--dry-run') || args.includes('-d')) {
+    await runPush({ dryRun: true });
     return;
   }
 
@@ -788,12 +811,14 @@ async function main() {
 用法:
   node daily-push.js                  推送给所有已开启的用户
   node daily-push.js --dry-run        模拟推送（只计算不交付、不落盘）
-  node daily-push.js --test <userId>  测试推送指定用户
+  node daily-push.js --test <userId>  **调试专用**；如该用户未 opt-in 推送，默认拒绝。
+                                      建议配合 --dry-run；仅用户本人调试自己的推送时才可追加 --i-am-the-user 走正式交付。
   node daily-push.js --list           仅输出聚合统计（不提供 --full 通道）
 
 隐私说明:
   - sendMessage 不会将个人运势输出到 stdout，仅在非 dry-run 下写入个人 outbox 由 OpenClaw 运行时点对点派发。
   - --dry-run 仅做运算验证，不会产生任何 outbox 文件、也不会将运势正文输出到终端。
+  - --test 默认不会绕过 opt-in 检查，以防止给未同意用户发送个人运势。
   - --list 只出现聚合计数（人数/渠道分布/推送状态），不提供 --full 通道。
   - 需查看某个用户详情，请在本人设备上运行：node scripts/profile.js show <userId> --full。
 
