@@ -15,7 +15,11 @@ const path = require('path');
 const PROFILES_DIR = path.join(__dirname, '../data/profiles');
 
 // 支持的关注领域
-const TOPICS = ['财运', '事业', '感情', '健康', '婚姻', '子女', '官司', '出行', '风水'];
+// 注意：v1.1.8 起移除「官司」主题。法律相关问题不在本 skill 声明的覆盖范围内
+// （SKILL.md 已声明不覆盖法律/医疗/金融等专业领域），
+// 持久化追踪「官司」会构成超出声明范围的敏感画像，因此从可记录主题中下线。
+// 历史档案中已存在的「官司」记录会在 _computeWeights/_normalizeWeights 中被自动忽略。
+const TOPICS = ['财运', '事业', '感情', '健康', '婚姻', '子女', '出行', '风水'];
 
 // 互动来源权重倍率
 const CONTEXT_MULTIPLIERS = {
@@ -86,6 +90,17 @@ function _sortedTopics(weights) {
 
 /**
  * 记录一次互动
+ *
+ * 隐私披露（与 v1.1.8 起的 finding 修复一致）：
+ * - 调用方（Agent / push 流程）必须先确保用户对「记录互动 → 用于偏好学习」是知情且同意的。
+ *   推荐做法：第一次记录前在终端 / UI 中向用户读出本说明并要求显式 yes。
+ * - 写入位置：data/profiles/<userId>.json 的 interactionLog 字段（**仅本地**，不上传）。
+ * - 留存策略：滚动保留最近 MAX_LOG_SIZE 条，超出后**永久丢弃最旧记录**；
+ *   也可以随时通过 `node scripts/profile.js delete <userId>` 整体清空，
+ *   或手工编辑 JSON 中的 interactionLog 字段。
+ * - 主题白名单：见 TOPICS。`官司` 等敏感法律主题已下线，不再被记录。
+ * - 推送来源（context=morning_push/evening_push）的写入由 daily-push.js 串联，
+ *   仅在用户已显式 opt-in 推送（preferences.pushOptInAt 存在）后才会发生。
  */
 function recordInteraction(userId, topic, context = 'explicit_query') {
   const profile = loadProfile(userId);

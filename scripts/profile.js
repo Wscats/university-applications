@@ -295,15 +295,99 @@ function listProfiles() {
 
 /**
  * 删除档案
+ *
+ * v1.1.8 起：
+ *  - 默认**软删除**：将 <userId>.json 重命名为 <userId>.json.deleted-<timestamp>，
+ *    保留在 data/profiles/ 同目录内，用户 30 天内可手动恢复。
+ *  - 要求**二次确认**：必须传入 --yes 或交互式输入 'DELETE' 文本；否则拒绝。
+ *  - 可选 `--purge` 强制**硬删除**（fs.unlink），仅在用户明确同意丢弃可恢复性时使用。
+ *  - 在删除前试图调用 push-toggle.js disablePush，防止遗留的 cron 依然调度运行，造成 stale-push 问题。
+ *
+ * 警告：本指令处理的是出生信息 / 个人八字 / 家庭成员资料等**高敏感个人信息**，
+ * 请勿在批量脚本 / CI 中无人值守地调用。
  */
-function deleteProfile(userId) {
-  const filePath = getProfilePath(userId);
-  if (fs.existsSync(filePath)) {
-    fs.unlinkSync(filePath);
-    console.log(`✅ 已删除: ${userId}`);
-  } else {
-    console.log(`❌ 档案不存在: ${userId}`);
+function _readlineConfirm(promptText) {
+  // 同步读取一行 stdin，避引 readline 异步依赖。
+  try {
+    process.stdout.write(promptText);
+    const fdRead = process.stdin.fd;
+    const buf = Buffer.alloc(1);
+    let line = '';
+    while (true) {
+      try {
+        const n = fs.readSync(fdRead, buf, 0, 1);
+        if (n === 0) break;
+        const ch = buf.toString('utf8', 0, 1);
+        if (ch === '\n') break;
+        if (ch === '\r') continue;
+        line += ch;
+        if (line.length > 64) break;
+      } catch (e) {
+        // EAGAIN 或 stdin 不可读（非 tty），退出
+        return null;
+      }
+    }
+    return line.trim();
+  } catch (_) {
+    return null;
   }
+}
+
+function deleteProfile(userId, opts = {}) {
+  const filePath = getProfilePath(userId);
+  if (!fs.existsSync(filePath)) {
+    console.log(`❌ 档案不存在: ${userId}`);
+    return;
+  }
+
+  const yesFlag = !!opts.yes;
+  const purgeFlag = !!opts.purge;
+
+  // 警告体
+  console.error(`⚠️  即将${purgeFlag ? '硬删除（不可恢复）' : '软删除（可 30 天内手动恢复）'}该用户档案：${userId}`);
+  console.error('⚠️  该文件包含出生信息、八字、可选家庭成员资料与互动日志。');
+  if (purgeFlag) {
+    console.error('⚠️  已设置 --purge：文件将被彻底从磁盘上移除，不可恢复。');
+  } else {
+    console.error('⚠️  软删除后文件仍位于 data/profiles/ 下，带 .deleted-<时间戳> 后缀；如需恢复，只需重命名去掉后缀即可。');
+  }
+
+  // 二次确认：--yes 或 交互式输入 'DELETE'
+  if (!yesFlag) {
+    const tty = process.stdin.isTTY;
+    if (!tty) {
+      console.error('❌ 非交互式环境下拒绝删除：请重新运行并加上 --yes 明确表示同意（可同时加 --purge 表示硬删除）。');
+      return;
+    }
+    const ans = _readlineConfirm(`请输入 'DELETE' 以确认删除 ${userId}，或输入其他任意字符取消： `);
+    if (ans !== 'DELETE') {
+      console.log('✖ 已取消删除。');
+      return;
+    }
+  }
+
+  // 先关闭推送，避免遗留 cron
+  try {
+    const { disablePush } = require('./push-toggle');
+    if (typeof disablePush === 'function') {
+      try { disablePush(userId); } catch (e) { /* 静默 */ }
+    }
+  } catch (e) {
+    // push-toggle 不可用，不阫塞主流程
+  }
+
+  if (purgeFlag) {
+    fs.unlinkSync(filePath);
+    console.log(`✅ 已硬删除: ${userId}`);
+    return;
+  }
+
+  // 软删除 = 重命名
+  const ts = new Date().toISOString().replace(/[:.]/g, '-');
+  const tomb = `${filePath}.deleted-${ts}`;
+  fs.renameSync(filePath, tomb);
+  console.log(`✅ 已软删除为：${path.basename(tomb)}`);
+  console.log('   如需恢复，请去掉 .deleted-<时间戳> 后缀；如需彻底丢弃，请手动删除该备份文件。');
 }
 
 // 主入口
@@ -374,9 +458,17 @@ switch (command) {
     
   case 'delete':
     if (args[1]) {
-      deleteProfile(args[1]);
+      // --yes / -y 跳过交互式二次确认（批量环境下主动表示同意）
+      // --purge 表示硬删除（不可恢复）；不加则默认软删除
+      const opts = {
+        yes: args.includes('--yes') || args.includes('-y'),
+        purge: args.includes('--purge')
+      };
+      deleteProfile(args[1], opts);
     } else {
-      console.log('用法: node profile.js delete <userId>');
+      console.log('用法: node profile.js delete <userId> [--yes] [--purge]');
+      console.log('  --yes / -y    跳过交互式确认（批量场景主动同意）');
+      console.log('  --purge       硬删除不可恢复；默认为软删除（可手动恢复）');
     }
     break;
     

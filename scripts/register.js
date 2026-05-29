@@ -242,22 +242,17 @@ function createProfile(userId, name, gender, birthDate, birthTime, birthPlace, s
       children: []
     },
     preferences: {
-      pushMorning: true,
-      pushEvening: false,
-      morningTime: '07:00',
-      eveningTime: '20:00',
-      channels: ['openclaw'],
+      // 推送字段默认不写入：SKILL.md 声明「推送默认关闭（opt-in）」，
+      // 只有在用户显式运行 `node scripts/push-toggle.js on <userId>` 后，
+      // 才会动态补上 pushEnabled / pushOptInAt / pushMorning / pushEvening / morningTime / eveningTime / channels 。
+      // 注册默认**不**开启任何推送、**不**设置 notifications.dailyFortune/riskAlert，避免隐含 opt-in。
       focusAreas: ['事业', '财运', '健康'],
       riskTolerance: '中等'
     },
     settings: {
       defaultSect: sect,
-      lunarCalendar: true,
-      notifications: {
-        dailyFortune: true,
-        riskAlert: true,
-        weeklySummary: false
-      }
+      lunarCalendar: true
+      // notifications.* 字段默认不写入；如需启用推送请走 push-toggle.js on 路径以得到显式 opt-in 时间戳。
     },
     createdAt: new Date().toISOString().split('T')[0],
     updatedAt: new Date().toISOString().split('T')[0]
