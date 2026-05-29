@@ -12,7 +12,7 @@ description: |
     注意：仅为文化/爱好参考，不是医疗、法律、心理、财务、婚姻专业建议；遇重大决策请咨询专业人士。
 metadata:
   displayName: "命理大师"
-  version: 1.1.6
+  version: 1.1.7
   keywords: 算命, 八字, 紫微斗数, 奇门遁甲, 六爻, 梅花易数, 塔罗, 星盘, 风水, 九宫飞星, 今日运势, 每日运程, 占卜, 合婚, 择吉, 数字命理, 生命灵数, fortune telling, BaZi, ZiWei, QiMen, Tarot, astrology, feng shui, I Ching, numerology, daily horoscope
   openclaw:
     emoji: "☯️"

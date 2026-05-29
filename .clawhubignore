@@ -50,3 +50,8 @@ __tests__/
 # Publish artifacts
 .clawhub/
 *.clawpkg
+
+# Local-only release tooling — must NOT be packaged into the published skill.
+# publish.sh contains git/clawhub/tag/release automation that is unrelated to
+# the divination feature set and would expand the skill's execution surface.
+scripts/publish.sh

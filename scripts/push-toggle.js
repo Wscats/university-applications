@@ -264,6 +264,7 @@ function enablePush(userId, options = {}) {
   // 保存到档案
   if (!profile.preferences) profile.preferences = {};
   profile.preferences.pushEnabled = true;
+  profile.preferences.pushOptInAt = new Date().toISOString(); // 显式 opt-in 时间戳：daily-push 会二次验证
   profile.preferences.pushMorning = true;
   profile.preferences.pushEvening = true;
   profile.preferences.morningTime = morningTime;
@@ -303,6 +304,7 @@ function disablePush(userId) {
 
   if (!profile.preferences) profile.preferences = {};
   profile.preferences.pushEnabled = false;
+  profile.preferences.pushOptInAt = null; // \u6e05\u9664 opt-in \u65f6\u95f4\u6233\uff1bdaily-push \u4f1a\u62d2\u7edd\u53d1\u9001
   profile.preferences.pushMorning = false;
   profile.preferences.pushEvening = false;
   profile.push = { cronIds: {}, disabledAt: new Date().toISOString() };

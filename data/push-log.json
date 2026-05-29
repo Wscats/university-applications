@@ -154,6 +154,17 @@
           "status": "dry-run"
         }
       ]
+    },
+    {
+      "date": "2026-05-29",
+      "timestamp": "2026-05-29T12:38:16.558Z",
+      "dryRun": true,
+      "results": [
+        {
+          "userIdHash": "d517d43b",
+          "status": "dry-run"
+        }
+      ]
     }
   ]
 }

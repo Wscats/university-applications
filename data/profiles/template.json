@@ -6,10 +6,9 @@
       "view":   "node scripts/profile.js show <userId>",
       "list":   "node scripts/profile.js list",
       "edit":   "node scripts/profile.js save <userId> <field> <value>",
-      "delete": "node scripts/profile.js delete <userId>",
-      "disablePush": "node scripts/push-toggle.js off <userId>"
+      "delete": "node scripts/profile.js delete <userId>"
     },
-    "note": "All fields below are OPTIONAL. Leave family members empty unless you actually want cross-chart analysis. interactionLog can be cleared at any time by editing this file."
+    "note": "本模板仅描述出生信息字段，所有字段均为可选。每日推送默认关闭，需要时单独运行 push-toggle.js on <userId> 才会注入 push 字段；本模板不应被手动改成已启用推送的状态。"
   },
   "userId": "{{userId}}",
   "name": "{{姓名}}",
@@ -41,13 +40,7 @@
   },
   "language": "zh",
   "preferences": {
-    "_pushNote": "推送默认全部关闭；opt-in 后由 scripts/push-toggle.js 动态启用，不要手动修改本模板的 false 为 true",
-    "pushEnabled": false,
-    "pushMorning": false,
-    "pushEvening": false,
-    "morningTime": "07:00",
-    "eveningTime": "20:00",
-    "channels": ["openclaw"],
+    "_note": "本模板不包含任何推送相关字段。如需启用每日运势推送，请运行：node scripts/push-toggle.js on <userId>，它会在该用户的 profile 文件中动态补充 pushEnabled / pushOptInAt 与 cron 渠道信息。",
     "focusAreas": ["事业", "财运", "健康"],
     "riskTolerance": "中等"
   },
@@ -105,16 +98,9 @@
   },
   "settings": {
     "defaultSect": 1,
-    "lunarCalendar": true,
-    "notifications": {
-      "_default": "默认全部关闭；opt-in 后才会启用",
-      "dailyFortune": false,
-      "riskAlert": false,
-      "weeklySummary": false
-    }
+    "lunarCalendar": true
   },
   "interactionLog": [],
-  "lastPushDate": "",
   "createdAt": "{{注册日期}}",
   "updatedAt": "{{更新日期}}"
 }

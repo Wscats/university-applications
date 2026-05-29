@@ -207,26 +207,29 @@ function generateYiJi(bazi, dayGanZhi) {
   const yongshen = calculateBaziYongshen(bazi);
   const primaryElement = yongshen.primary;
 
+  // 注意：这里特意改成「氛围/主题」类描述，不再给出"投资/手术/签约/搬家/诉讼"
+  // 等具体行动指令；推送属于自动触发的娱乐性内容，不应越界为
+  // 法律/医疗/财务的具体行为建议。
   const YI_JI = {
     '木': {
-      yi: ['出行', '学习', '交友', '谈判', '签约', '求职'],
-      ji: ['冒险', '投资', '手术', '安葬', '破土']
+      yi: ['沟通对话的氛围', '学习与吸收新事物', '主动联系老朋友', '为想做的事列计划'],
+      ji: ['情绪冲动下的取舍', '对结果过早下定论', '勉强自己的应酬']
     },
     '火': {
-      yi: ['表白', '签约', '创新', '表演', '开业', '上任'],
-      ji: ['安葬', '搬家', '诉讼', '动土', '破土']
+      yi: ['表达想法', '尝试一点小创新', '让自己被看见', '梳理近期热度过高的情绪'],
+      ji: ['口角与争辩', '硬碰硬的对抗', '对比与较劲']
     },
     '土': {
-      yi: ['种植', '装修', '求职', '上任', '签约', '装修'],
-      ji: ['动土', '开业', '破土', '安葬', '投资']
+      yi: ['整理空间与习惯', '稳住节奏与计划', '回应身边人的需要', '把已经在做的事做厚一层'],
+      ji: ['同时摊太多事', '为别人的进度焦虑', '强行加速']
     },
     '金': {
-      yi: ['上任', '洽谈', '收款', '装修', '签约', '投资'],
-      ji: ['安葬', '破土', '开业', '动土', '搬家']
+      yi: ['梳理边界与原则', '复盘与归档', '精简事项', '把"差不多"做到位'],
+      ji: ['过度严苛地评判他人', '对自己反复挑剔', '冷处理本该回应的关系']
     },
     '水': {
-      yi: ['出行', '考试', '推广', '流动', '求职', '开业'],
-      ji: ['搬家', '动土', '投资', '安葬', '破土']
+      yi: ['留出独处与休整', '换个角度看老问题', '阅读、写作与表达', '柔和地推进进度'],
+      ji: ['过度内耗', '把别人的情绪都接到自己身上', '在不确定时强求答案']
     }
   };
 
@@ -292,30 +295,33 @@ function generateWarnings(bazi, dayGanZhi) {
   const warnings = [];
   const zhi = dayGanZhi[1];
 
-  // 驿马星
+  // 注意：以下提示属于自我节奏类的轻量提醒，不是医疗/财务/法律的具体行动指令。
+  // 请勿据此做投资决策、终止治疗或撤销合同。
+
+  // 驿马星 → 节奏类提醒
   const yimaZhi = ['申', '亥', '寅', '巳'];
   if (yimaZhi.includes(zhi)) {
-    warnings.push({ level: '🟡', type: '出行', msg: '今日驿马星动，出行注意安全，提前出门' });
+    warnings.push({ level: '🟡', type: '节奏', msg: '今日变动气息偏强，给行程多留一点缓冲' });
   }
 
-  // 五黄煞（简易判断：基于地支）
+  // 五黄煞 → 自我照护类提醒
   const wuhuang = ['子', '卯', '午', '酉'];
   if (wuhuang.includes(zhi)) {
-    warnings.push({ level: '🟡', type: '健康', msg: '注意脾胃保养，饮食清淡' });
+    warnings.push({ level: '🟡', type: '自我照护', msg: '近期容易能量低落，注意休息与饮食的规律' });
   }
 
-  // 八字日主与当日关系
+  // 八字日主与当日关系 → 心态/精力类提醒
   const dayStem = bazi?.dayStem || '甲';
   const dayStemWuxing = { '甲': '木', '乙': '木', '丙': '火', '丁': '火', '戊': '土', '己': '土', '庚': '金', '辛': '金', '壬': '水', '癸': '水' }[dayStem] || '木';
   const dayWuxing = ZHI_ELEMENT[zhi] || '土';
   const ke = { '木': '土', '火': '金', '土': '水', '金': '木', '水': '火' };
 
   if (ke[dayStemWuxing] === dayWuxing) {
-    warnings.push({ level: '🔴', type: '破财', msg: '今日财星受克，谨慎投资，避免大额花费' });
+    warnings.push({ level: '🟡', type: '心绪', msg: '今日容易冲动消费或情绪化决定，重要选择宜冷静一日再做' });
   }
 
   if (warnings.length === 0) {
-    warnings.push({ level: '🟢', type: '综合', msg: '今日总体顺遂，无明显风险' });
+    warnings.push({ level: '🟢', type: '综合', msg: '今日总体平稳，按既定节奏行事即可' });
   }
 
   return warnings;
@@ -450,35 +456,37 @@ function generatePersonalizedFortune(profile, date = new Date()) {
 
   let report = `${fortuneEmoji} 【${userName}${gender}】${year}年${month}月${day}日（周${weekDay}）
 
+⚠️ 本日运势仅为娱乐性文化参考；不是医疗、法律、心理、财务、婚姻、就业的专业建议；不应作为投资、合同、医疗、人身安全等决策的依据。如有相应需要，请联系合规专业人士。
+
 ━━━━━━━━━━━━━━━━━━━━━━
-📊 今日综合指数
-   事业 ${formatStars(scores.career)} ${scores.career}分
-   财运 ${formatStars(scores.wealth)} ${scores.wealth}分
-   感情 ${formatStars(scores.love)} ${scores.love}分
-   健康 ${formatStars(scores.health)} ${scores.health}分
+📊 今日趋势侧写（参考用）
+   工作主题 ${formatStars(scores.career)}
+   财务节奏 ${formatStars(scores.wealth)}
+   关系氛围 ${formatStars(scores.love)}
+   身心状态 ${formatStars(scores.health)}
 ━━━━━━━━━━━━━━━━━━━━━━
 
-🎨 幸运属性
+🎨 配色 / 方位 / 数字（生活美学层面）
    颜色：${elementInfo.color}
    方位：${elementInfo.direction}
    数字：${luckyNumbers.join('、')}
-   幸运物：${elementInfo.emoji} ${elementInfo.element}元素相关
+   元素：${elementInfo.emoji} ${elementInfo.element}
 
-💮 今日吉凶
+💮 今日整体气象
    ${fortuneLevel.level} — ${fortuneLevel.desc}
 
-💼 今日宜忌
-   ✅ 宜：${yiJi.yi.join('、')}
-   ❌ 忌：${yiJi.ji.join('、')}
+💼 今日适合 / 不太适合的「氛围」
+   ✅ 适合：${yiJi.yi.join('、')}
+   ⚠️ 不太适合：${yiJi.ji.join('、')}
 
-⚠️ 风险提示
+⚠️ 自我节奏提醒（非医疗 / 财务 / 法律建议）
 ${warnings.map(w => `   ${w.level}【${w.type}】${w.msg}`).join('\n')}
 
-⏰ 吉时
+⏰ 适合行事的时段
 ${luckyHours.slice(0, 3).map(h => `   • ${h.zhi}时（${h.range}点）- ${h.tip}`).join('\n')}
-${luckyHours.length > 3 ? `   • ...等 ${luckyHours.length} 个吉时` : ''}
+${luckyHours.length > 3 ? `   • ...等 ${luckyHours.length} 个时段` : ''}
 
-📅 流年流月
+📅 季节 / 时令侧写
 ${yearMonthTips.map(t => `   【${t.period}】${t.msg}`).join('\n')}
 
 💡 今日一言
@@ -515,11 +523,19 @@ function loadAllProfiles() {
 }
 
 function getUsersWithPushEnabled(profiles) {
+  // 双重 opt-in 安全门：
+  //  - pushEnabled 为 true
+  //  - pushOptInAt 存在（证明是用户主动调用 push-toggle.js on 后写入的时间戳，
+  //    仅字段为 true 不足以发送）
+  //  - bazi 完整
+  // 如果 profile 文件所有者手工修改了 pushEnabled:true 但未补 opt-in 时间戳，
+  // 则必须走 push-toggle.js 重新 opt-in，避免静默默认启用推送。
   return profiles.filter(p => {
-    // 新字段：preferences.pushEnabled（优先）或 legacy 字段
-    const enabled = p.preferences?.pushEnabled ?? p.preferences?.pushMorning ?? false;
+    const prefs = p.preferences || {};
+    const enabled = prefs.pushEnabled === true;
+    const optedIn = !!prefs.pushOptInAt; // 时间戳存在
     const hasBazi = p.bazi && p.bazi.day && p.bazi.dayStem;
-    return enabled && hasBazi;
+    return enabled && optedIn && hasBazi;
   });
 }
 
@@ -543,19 +559,30 @@ function updateLastPushDate(userId) {
 async function sendMessage(userId, message, opts = {}) {
   const { dryRun = false } = opts;
   // 重要：为避免在多用户环境下将某个用户的运势串台到其他人，
-  // 这里不再直接将运势正文写到 stdout，而是：
-  //  1. 在 stdout 输出仅含脱敏 userId 的状态行（供调度者/运维查看）。
-  //  2. 将完整运势写入每个用户独立的本地交付文件，由 OpenClaw 运行时
-  //     按 userId 读取并点对点发送，避免串台、广播、日志被无关用户看到。
-  //  3. dry-run 同样不会在 stdout 输出正文，避免调试模式下泄露。
+  // 这里不会将运势正文写到 stdout，而是：
+  //  1. 在 stdout 输出仅含脱敏状态行（供调度者/运维查看）。
+  //  2. 实际发送模式下将完整运势写入每个用户独立的本地交付文件，
+  //     由 OpenClaw 运行时按 userId 读取并点对点发送。
+  //  3. **dry-run 是真正的不落盘运行**：不会生成任何 outbox / outbox-dryrun 文件，
+  //     也不会将运势正文输出到 stdout，仅进行计算验证。这保证了
+  //     调试/CI/共享终端中不会意外留存个人运势与八字数据。
   if (!userId) {
     console.error('   ⚠ sendMessage: userId 为空，拒绝发送以避免泄露');
     return false;
   }
 
+  if (dryRun) {
+    // dry-run 严格不落盘、不交付、不输出运势正文；
+    // 仅验证调用者传入的 userId / message 是否合法。
+    if (typeof message !== 'string' || !message.length) {
+      console.error('   ⚠ dry-run: message 为空，计算可能出错');
+      return false;
+    }
+    return true;
+  }
+
   try {
-    const subdir = dryRun ? 'outbox-dryrun' : 'outbox';
-    const outboxDir = path.join(__dirname, '../data', subdir);
+    const outboxDir = path.join(__dirname, '../data/outbox');
     if (!fs.existsSync(outboxDir)) {
       fs.mkdirSync(outboxDir, { recursive: true, mode: 0o700 });
     }
@@ -566,7 +593,7 @@ async function sendMessage(userId, message, opts = {}) {
     const payload = {
       userId: safeId,
       generatedAt: new Date().toISOString(),
-      mode: dryRun ? 'dry-run' : 'live',
+      mode: 'live',
       content: message
     };
     // 写入文件时限制为仅当前用户可读（0600）
@@ -647,9 +674,9 @@ async function runPush({ dryRun = false, testUserId = null } = {}) {
       const fortune = generatePersonalizedFortune(profile, date);
 
       if (dryRun) {
-        // 在 dry-run 下，正文依然仅写入个人 outbox，避免 stdout 串台
+        // dry-run 下：仅验证运算能否生成运势文本，不交付、不落盘、不输出正文
         await sendMessage(userId, fortune, { dryRun: true });
-        console.log('✅ (dry-run 已写入 outbox)');
+        console.log('✅ (dry-run 仅验算，未写入任何文件)');
         successCount++;
       } else {
         const sent = await sendMessage(userId, fortune);
@@ -690,60 +717,34 @@ async function runPush({ dryRun = false, testUserId = null } = {}) {
 // 列出开启推送的用户
 // ============================================================
 
-function listPushUsers(opts = {}) {
-  const { full = false } = opts;
+function listPushUsers() {
+  // 出于隐私小化原则，本命令只输出聚合计数，
+  // 不提供任何逐条查看八字/姓名/userId/推送作息的通道，
+  // 所有完整信息请仅通过 `node scripts/profile.js show <userId> --full` 在本人设备上查看。
   const profiles = loadAllProfiles();
   const targets = getUsersWithPushEnabled(profiles);
 
-  console.log('\n📋 已开启每日运势推送的用户:\n');
-  if (!full) {
-    // 脱敏提示走 stderr，以避免这行在 stdout 记录中被误判为数据输出
-    console.error('   ⚠ 隐私提示：默认仅显示脱敏概要，避免在共享/日志环境中泄露八字、姓名、推送作息等用户特征。');
-    console.error('   如需查看完整信息，请在个人设备上运行：node daily-push.js --list --full\n');
-  }
+  console.log('\n📋 已开启每日运势推送的用户（仅聚合统计）:\n');
+  console.error('   ⚠ 本命令不输出任何个人信息。需查看单个用户详情请在本人设备上使用：node scripts/profile.js show <userId> --full\n');
+
   if (targets.length === 0) {
     console.log('   （暂无用户开启推送）\n');
     return;
   }
 
-  const maskId = (s) => {
-    if (!s) return '';
-    if (s.length <= 4) return s[0] + '***';
-    return s.slice(0, 2) + '***' + s.slice(-2);
-  };
-  const maskName = (s) => {
-    if (!s) return '';
-    return s[0] + '*'.repeat(Math.max(1, s.length - 1));
-  };
-
-  if (!full) {
-    // 默认脱敏下：只呈现总数与脱敏后的职能性计数，不逐条输出姓名/推送作息
-    const channelsStat = {};
-    for (const p of targets) {
-      const ch = (p.preferences?.channels || ['openclaw'])[0] || 'openclaw';
-      channelsStat[ch] = (channelsStat[ch] || 0) + 1;
-    }
-    const lastPushStat = targets.reduce((acc, p) => {
-      acc[p.lastPushDate ? 'pushed' : 'never'] = (acc[p.lastPushDate ? 'pushed' : 'never'] || 0) + 1;
-      return acc;
-    }, {});
-    console.log(`   总计：${targets.length} 人开启推送`);
-    console.log(`   渠道分布：${Object.entries(channelsStat).map(([k,v])=>`${k}=${v}`).join(', ')}`);
-    console.log(`   推送状态：已推送过=${lastPushStat.pushed||0}, 从未推送=${lastPushStat.never||0}`);
-    console.log('');
-    return;
-  }
-
-  // full 模式：在个人设备上才会呈现逐条详情
+  const channelsStat = {};
   for (const p of targets) {
-    const lastPush = p.lastPushDate || '从未推送';
-    const channels = (p.preferences?.channels || ['openclaw']).join(', ');
-    console.log(`   👤 ${p.name} (${p.userId})`);
-    console.log(`      八字: ${p.bazi?.year} ${p.bazi?.month} ${p.bazi?.day} ${p.bazi?.hour}`);
-    console.log(`      推送时间: ${p.preferences?.morningTime || '07:00'} | 渠道: ${channels}`);
-    console.log(`      最后推送: ${lastPush}`);
-    console.log('');
+    const ch = (p.preferences?.channels || ['openclaw'])[0] || 'openclaw';
+    channelsStat[ch] = (channelsStat[ch] || 0) + 1;
   }
+  const lastPushStat = targets.reduce((acc, p) => {
+    acc[p.lastPushDate ? 'pushed' : 'never'] = (acc[p.lastPushDate ? 'pushed' : 'never'] || 0) + 1;
+    return acc;
+  }, {});
+  console.log(`   总计：${targets.length} 人开启推送`);
+  console.log(`   渠道分布：${Object.entries(channelsStat).map(([k,v])=>`${k}=${v}`).join(', ')}`);
+  console.log(`   推送状态：已推送过=${lastPushStat.pushed||0}, 从未推送=${lastPushStat.never||0}`);
+  console.log('');
 }
 
 // ============================================================
@@ -754,8 +755,13 @@ async function main() {
   const args = process.argv.slice(2);
 
   if (args.includes('--list') || args.includes('-l')) {
-    const full = args.includes('--full');
-    listPushUsers({ full });
+    // 不再提供 --full 通道，避免批量暴露个人信息
+    if (args.includes('--full')) {
+      console.error('   ❌ 出于隐私考虑，--list --full 已在 v1.1.7 移除。如需查看单个用户详情，请在本人设备运行：');
+      console.error('   node scripts/profile.js show <userId> --full');
+      process.exit(1);
+    }
+    listPushUsers();
     return;
   }
 
@@ -781,18 +787,18 @@ async function main() {
 
 用法:
   node daily-push.js                  推送给所有已开启的用户
-  node daily-push.js --dry-run        模拟推送（显示内容，不发送）
+  node daily-push.js --dry-run        模拟推送（只计算不交付、不落盘）
   node daily-push.js --test <userId>  测试推送指定用户
-  node daily-push.js --list           列出已开启推送的用户（默认脱敏）
-  node daily-push.js --list --full    列出完整信息（仅推荐在可信设备上运行）
+  node daily-push.js --list           仅输出聚合统计（不提供 --full 通道）
 
 隐私说明:
-  - sendMessage 不会将个人运势输出到 stdout，仅写入 data/outbox/<userId>_<date>.txt。
-  - --list 默认隐藏八字、姓名、用户名等敏感信息。
-  - 避免在共享终端/CI/cron 邮箉中打印 --full，或在推送运行时启用 dry-run。
+  - sendMessage 不会将个人运势输出到 stdout，仅在非 dry-run 下写入个人 outbox 由 OpenClaw 运行时点对点派发。
+  - --dry-run 仅做运算验证，不会产生任何 outbox 文件、也不会将运势正文输出到终端。
+  - --list 只出现聚合计数（人数/渠道分布/推送状态），不提供 --full 通道。
+  - 需查看某个用户详情，请在本人设备上运行：node scripts/profile.js show <userId> --full。
 
 配置:
-  - 用户的 preferences.pushEnabled 需为 true
+  - 用户的 preferences.pushEnabled 需为 true 且必须包含显式 opt-in 时间戳（preferences.pushOptInAt）
   - 用户的 preferences.morningTime 决定推送时间（默认07:00）
   - 渠道由 preferences.channels 指定（openclaw/telegram/feishu，由 OpenClaw 运行时统一投递）
   - 用户需有完整的八字信息（bazi.dayStem 不为空）
