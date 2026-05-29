@@ -7,7 +7,7 @@ description: |
   自动识别体系与资料完整度，按 S/A/B/C 四级精度输出解读。
   触发词：算命、八字、紫微、奇门遁甲、六爻、梅花易数、塔罗、星盘、风水、飞星、
   今日运势、每日运程、占卜、合婚、择吉、数字命理、生命灵数。
-version: 1.1.2
+version: 1.1.4
 keywords: 算命, 八字, 紫微斗数, 奇门遁甲, 六爻, 梅花易数, 塔罗, 星盘, 风水, 九宫飞星, 今日运势, 每日运程, 占卜, 合婚, 择吉, 数字命理, 生命灵数, fortune telling, BaZi, ZiWei, QiMen, Tarot, astrology, feng shui, I Ching, numerology, daily horoscope
 metadata:
   openclaw:
