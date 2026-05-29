@@ -11,17 +11,56 @@ const { astro } = require('iztro');
 // ============================================================
 // 知识库格局匹配系统
 // ============================================================
+//
+// 安全说明（信任边界）：
+//   本模块仅会读取「与当前脚本同级的内置 references/patterns 目录」中的格局文件，
+//   或显式由 OPENCLAW_KNOWLEDGE_DIR 指向的、且仅在受信任安装位置的目录。
+//   为避免读取到家目录下任意 Markdown（可能为用户私人笔记）造成隐私泄漏 / 内容污染：
+//   1. 默认目录改为 skill 自带的只读 references；不再隐式读取 ~/.openclaw/...。
+//   2. 仅当用户主动设置 OPENCLAW_KNOWLEDGE_DIR 时才使用其值，
+//      并强制目录中存在 .patterns-allowed 标记文件，否则视为不可信，跳过。
+//   3. 仅匹配格局白名单文件名前缀，避免读入与命理格局无关的私人文档。
+//   4. 限制单文件大小 ≤ 256KB，限制总读取数量 ≤ 200 条，防资源滥用。
 
-const KNOWLEDGE_DIR = process.env.OPENCLAW_KNOWLEDGE_DIR
-  || (process.env.HOME ? path.join(process.env.HOME, '.openclaw/workspace/knowledge') : '');
+const DEFAULT_PATTERN_DIR = path.join(__dirname, '../references/patterns');
+
+function resolveKnowledgeDir() {
+  const envDir = process.env.OPENCLAW_KNOWLEDGE_DIR;
+  if (envDir && fs.existsSync(envDir)) {
+    // 必须显式声明该目录为可信内容，避免误读家目录下的私人 md 文件
+    const marker = path.join(envDir, '.patterns-allowed');
+    if (fs.existsSync(marker)) return envDir;
+    // 目录存在但未授权 → 不读取任何内容
+    return '';
+  }
+  return fs.existsSync(DEFAULT_PATTERN_DIR) ? DEFAULT_PATTERN_DIR : '';
+}
+
+const KNOWLEDGE_DIR = resolveKnowledgeDir();
+
+const MAX_PATTERN_FILE_BYTES = 256 * 1024;
+const MAX_PATTERN_FILES = 200;
+
+// 只允许包含这些关键字的文件名（命理格局相关）参与解析，
+// 防止读取到无关的私人 Markdown 文档导致信息越界。
+const PATTERN_FILE_ALLOW_KEYWORDS = [
+  '格局', '紫微', '斗数', '主星', '辅星', '四化', '十四主星',
+  '六吉', '六煞', '杂曜', 'pattern'
+];
 
 /**
  * 解析知识库中的格局文件，构建模式检测规则
  */
 function buildPatternRules() {
-  if (!fs.existsSync(KNOWLEDGE_DIR)) return [];
+  if (!KNOWLEDGE_DIR || !fs.existsSync(KNOWLEDGE_DIR)) return [];
 
-  const files = fs.readdirSync(KNOWLEDGE_DIR).filter(f => f.endsWith('.md'));
+  let files;
+  try {
+    files = fs.readdirSync(KNOWLEDGE_DIR).filter(f => f.endsWith('.md'));
+  } catch (e) {
+    return [];
+  }
+
   const rules = [];
   const skipNames = [
     '倪海厦', '渊海子平', '滴天髓', '命理交叉', '排盘不准',
@@ -30,14 +69,38 @@ function buildPatternRules() {
     '渊海子平-学习', '滴天髓-子平真诠', '命理交叉验证系统'
   ];
 
+  let consumed = 0;
   for (const file of files) {
+    if (consumed >= MAX_PATTERN_FILES) break;
     if (skipNames.some(n => file.includes(n))) continue;
+
+    // 文件名白名单：避免读取与命理格局无关的内容
+    if (KNOWLEDGE_DIR !== DEFAULT_PATTERN_DIR
+        && !PATTERN_FILE_ALLOW_KEYWORDS.some(k => file.includes(k))) {
+      continue;
+    }
+
     const filePath = path.join(KNOWLEDGE_DIR, file);
-    const content = fs.readFileSync(filePath, 'utf-8');
+
+    // 路径穿越防护：解析后的真实路径必须仍位于 KNOWLEDGE_DIR 之下
+    const resolved = path.resolve(filePath);
+    const base = path.resolve(KNOWLEDGE_DIR);
+    if (!resolved.startsWith(base + path.sep) && resolved !== base) continue;
+
+    let stat;
+    try { stat = fs.statSync(resolved); } catch (e) { continue; }
+    if (!stat.isFile()) continue;
+    if (stat.size > MAX_PATTERN_FILE_BYTES) continue;
+
+    let content;
+    try { content = fs.readFileSync(resolved, 'utf-8'); } catch (e) { continue; }
     const name = file.replace('.md', '');
 
     const rule = parsePatternFile(name, content);
-    if (rule) rules.push(rule);
+    if (rule) {
+      rules.push(rule);
+      consumed++;
+    }
   }
 
   return rules;

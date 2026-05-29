@@ -486,6 +486,9 @@ ${yearMonthTips.map(t => `   【${t.period}】${t.msg}`).join('\n')}
 
 🧮 八字用神：${yongshen.primary}（主）${yongshen.secondary.join('、')}（辅）
    今日干支：${dayGanZhi}（${elementInfo.element}气${elementInfo.direction.includes('东方') ? '旺' : '得令'}）
+
+———
+⚠️ 仅供文化参考，不构成医疗/法律/心理/财务/婚姻等专业建议。重大决策请咨询专业人士；如有情绪困扰请联系当地心理援助热线。
 `;
 
   return report;
@@ -538,9 +541,40 @@ function updateLastPushDate(userId) {
 // ============================================================
 
 async function sendMessage(userId, message) {
-  // 在 openclaw cron 环境中，stdout 内容由运行时自动发送给用户
-  console.log(message);
-  return true;
+  // 重要：为避免在多用户环境下将某个用户的运势串台到其他人，
+  // 这里不再直接将运势正文写到 stdout，而是：
+  //  1. 在 stdout 输出仅含 userId 的投递状态行（供调度者/运维查看）。
+  //  2. 将完整运势写入每个用户独立的本地交付文件，由 OpenClaw 运行时
+  //     按 userId 读取并点对点发送，避免串台、广播、日志被无关用户看到。
+  if (!userId) {
+    console.error('   ⚠ sendMessage: userId 为空，拒绝发送以避免泄露');
+    return false;
+  }
+
+  try {
+    const outboxDir = path.join(__dirname, '../data/outbox');
+    if (!fs.existsSync(outboxDir)) {
+      fs.mkdirSync(outboxDir, { recursive: true, mode: 0o700 });
+    }
+    // 仅仅允许 userId 中的安全字符，避免路径穿越
+    const safeId = String(userId).replace(/[^a-zA-Z0-9_\-]/g, '_');
+    const dateStr = new Date().toISOString().split('T')[0];
+    const outFile = path.join(outboxDir, `${safeId}_${dateStr}.txt`);
+    const payload = {
+      userId: safeId,
+      generatedAt: new Date().toISOString(),
+      content: message
+    };
+    // 写入文件时限制为仅当前用户可读（0600）
+    fs.writeFileSync(outFile, JSON.stringify(payload, null, 2), { encoding: 'utf8', mode: 0o600 });
+
+    // 在 stdout 仅输出状态行，不输出个人运势正文
+    console.log(`   → 运势已写入收件箱：${path.relative(process.cwd(), outFile)}`);
+    return true;
+  } catch (e) {
+    console.error(`   ❌ sendMessage 写入失败 (${userId}): ${e.message}`);
+    return false;
+  }
 }
 
 // ============================================================
@@ -652,23 +686,45 @@ async function runPush({ dryRun = false, testUserId = null } = {}) {
 // 列出开启推送的用户
 // ============================================================
 
-function listPushUsers() {
+function listPushUsers(opts = {}) {
+  const { full = false } = opts;
   const profiles = loadAllProfiles();
   const targets = getUsersWithPushEnabled(profiles);
 
   console.log('\n📋 已开启每日运势推送的用户:\n');
+  if (!full) {
+    console.log('   ⚠ 隐私提示：默认仅显示脱敏概要，避免在共享/日志环境中泄露八字等隐私信息。');
+    console.log('   如需查看完整信息，请在个人设备上运行：node daily-push.js --list --full\n');
+  }
   if (targets.length === 0) {
     console.log('   （暂无用户开启推送）\n');
     return;
   }
 
+  const maskId = (s) => {
+    if (!s) return '';
+    if (s.length <= 4) return s[0] + '***';
+    return s.slice(0, 2) + '***' + s.slice(-2);
+  };
+  const maskName = (s) => {
+    if (!s) return '';
+    return s[0] + '*'.repeat(Math.max(1, s.length - 1));
+  };
+
   for (const p of targets) {
     const lastPush = p.lastPushDate || '从未推送';
     const channels = (p.preferences?.channels || ['openclaw']).join(', ');
-    console.log(`   👤 ${p.name} (${p.userId})`);
-    console.log(`      八字: ${p.bazi?.year} ${p.bazi?.month} ${p.bazi?.day} ${p.bazi?.hour}`);
-    console.log(`      推送时间: ${p.preferences?.morningTime || '07:00'} | 渠道: ${channels}`);
-    console.log(`      最后推送: ${lastPush}`);
+    if (full) {
+      console.log(`   👤 ${p.name} (${p.userId})`);
+      console.log(`      八字: ${p.bazi?.year} ${p.bazi?.month} ${p.bazi?.day} ${p.bazi?.hour}`);
+      console.log(`      推送时间: ${p.preferences?.morningTime || '07:00'} | 渠道: ${channels}`);
+      console.log(`      最后推送: ${lastPush}`);
+    } else {
+      console.log(`   👤 ${maskName(p.name)} (${maskId(p.userId)})`);
+      console.log(`      八字: 已配置（已脱敏）`);
+      console.log(`      推送时间: ${p.preferences?.morningTime || '07:00'} | 渠道: ${channels}`);
+      console.log(`      最后推送: ${lastPush}`);
+    }
     console.log('');
   }
 }
@@ -681,7 +737,8 @@ async function main() {
   const args = process.argv.slice(2);
 
   if (args.includes('--list') || args.includes('-l')) {
-    listPushUsers();
+    const full = args.includes('--full');
+    listPushUsers({ full });
     return;
   }
 
@@ -709,7 +766,13 @@ async function main() {
   node daily-push.js                  推送给所有已开启的用户
   node daily-push.js --dry-run        模拟推送（显示内容，不发送）
   node daily-push.js --test <userId>  测试推送指定用户
-  node daily-push.js --list           列出已开启推送的用户
+  node daily-push.js --list           列出已开启推送的用户（默认脱敏）
+  node daily-push.js --list --full    列出完整信息（仅推荐在可信设备上运行）
+
+隐私说明:
+  - sendMessage 不会将个人运势输出到 stdout，仅写入 data/outbox/<userId>_<date>.txt。
+  - --list 默认隐藏八字、姓名、用户名等敏感信息。
+  - 避免在共享终端/CI/cron 邮箉中打印 --full，或在推送运行时启用 dry-run。
 
 配置:
   - 用户的 preferences.pushEnabled 需为 true
