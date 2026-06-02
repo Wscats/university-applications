@@ -15,6 +15,7 @@
 #   ./scripts/publish.sh --name 命理大师           # with display name
 #   ./scripts/publish.sh --retries 5 --timeout 120
 # ============================================================
+# clawhub publish /Users/reky/Documents/GitHub/university-applications --name 命理大师  --version 1.2.7
 
 set -euo pipefail
 
