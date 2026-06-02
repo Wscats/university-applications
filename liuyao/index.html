@@ -684,16 +684,17 @@
           - https://api.anthropic.com/v1  \u5f52\u5c5e\u4e3b\u4f53\uff1aAnthropic, PBC (US)
           - https://api.deepseek.com/v1   \u5f52\u5c5e\u4e3b\u4f53\uff1aDeepSeek (CN)
         \u8be5\u9009\u62e9\u4ec5\u5728\u672c\u9875\u9762 callLLM() \u4e2d\u4f7f\u7528\uff08\u89c1\u4e0b\u65b9 fetch \u8c03\u7528\uff09\uff1b\n        \u4e0d\u9009\u62e9\u6216\u4e0d\u586b API Key \u65f6\uff0c\u9875\u9762\u8d70\u300c\u79bb\u7ebf\u515c\u5e95\u89e3\u5366\u300d\uff0c**\u4e0d\u4ea7\u751f\u4efb\u4f55\u5916\u53d1\u8bf7\u6c42**\u3002\n      -->
+      <!--
+        SECURITY NOTE: 本下拉框仅允许三家硬编码 LLM 供应商端点，
+        不再支持「自定义地址」，以避免用户被诱导把 API Key 发往任意第三方公网地址。
+        如未来确实需要新增供应商，请在源码中显式追加 <option>，并同步更新
+        SKILL.md 的 allowed-endpoints 与 KNOWN_ENDPOINTS 白名单。
+      -->
       <select id="apiBase">
         <option value="https://api.openai.com/v1">OpenAI 官方 (api.openai.com · 外发到 OpenAI 美国)</option>
         <option value="https://api.anthropic.com/v1">Anthropic 官方 (api.anthropic.com · 外发到 Anthropic 美国)</option>
         <option value="https://api.deepseek.com/v1">DeepSeek 官方 (api.deepseek.com · 外发到 DeepSeek 中国)</option>
-        <option value="__custom__">⚠ 自定义（高风险 · 仅在确认服务方完全可信时使用）</option>
       </select>
-    </div>
-    <div class="cfg-row" id="customBaseRow" style="display:none">
-      <label>自定义地址：</label>
-      <input type="text" id="customApiBase" placeholder="https://your-trusted-endpoint/v1"/>
     </div>
     <div class="cfg-row">
       <label>模型：</label>
@@ -712,7 +713,7 @@
     <div class="privacy-note">
       <strong>⚠ 隐私提示：</strong>启用此功能后，您输入的「问题文字」与「卦象数据」会通过 HTTPS 直接发送到上方所选 API 接口，并使用您的 API Key 鉴权。
       <br/>· 请使用一个<strong>独立、限额、可随时回收</strong>的子密钥；切勿粘贴主账号 Key。
-      <br/>· 切勿在自定义地址中填入未知/不可信的服务器；那会同时泄露您的密钥与提问内容。
+      <br/>· 本工具<strong>仅支持</strong>上方三家官方端点，不再提供自定义地址，以防止密钥被发往不可信服务器。
       <br/>· 若提问涉及隐私（姓名/住址/疾病等），请考虑改用「离线兜底解卦」（不填 Key 即可）。
     </div>
   </details>
@@ -1111,11 +1112,11 @@ const KNOWN_ENDPOINTS = [
 ];
 
 function resolveApiBase(){
-  const sel=document.getElementById('apiBase').value;
-  if(sel==='__custom__'){
-    return (document.getElementById('customApiBase').value||'').trim().replace(/\/$/,'');
-  }
-  return sel.trim().replace(/\/$/,'');
+  // 仅允许从白名单 <select> 选项中取值；自定义地址能力已下线。
+  const sel=(document.getElementById('apiBase').value||'').trim().replace(/\/$/,'');
+  // 双重保险：即便 DOM 被注入异常 option，也只放行已知可信端点。
+  if(!isKnownEndpoint(sel)) return '';
+  return sel;
 }
 
 /* 严格 HTTPS 校验：拒绝 http、IP 直连、localhost、内网域名 */
@@ -1314,9 +1315,7 @@ function resetAll(){
 document.getElementById('apiModel').addEventListener('change',function(){
   document.getElementById('customModelRow').style.display=this.value==='custom'?'flex':'none';
 });
-document.getElementById('apiBase').addEventListener('change',function(){
-  document.getElementById('customBaseRow').style.display=this.value==='__custom__'?'flex':'none';
-});
+// 自定义 API 地址能力已下线（出于安全考虑），此处不再监听 apiBase 切换以展开自定义输入框。
 
 /* ═══════════════════════════════════════════════
    启动
