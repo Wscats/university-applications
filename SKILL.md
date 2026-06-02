@@ -1,6 +1,6 @@
 ---
 name: university-applications
-version: 1.2.0
+version: 1.2.1
 description: |
   全体系命理大师 — 八字四柱、紫微斗数、奇门遁甲、六爻、梅花易数、塔罗、星盘、
   数字命理、九宫飞星风水、合婚择吉一站式解读。本地档案、可选每日推送（默认关闭）、
