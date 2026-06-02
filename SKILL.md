@@ -1,9 +1,9 @@
 ---
 name: university-applications
-version: 1.2.3
+version: 1.2.4
 description: |
   全体系命理大师 — 八字四柱、紫微斗数、奇门遁甲、六爻、梅花易数、塔罗、星盘、
-  数字命理、九宫飞星风水、合婚择吉一站式解读。本地档案、可选每日推送（默认关闭）、
+  数字命理、九宫飞星风水、掌纹面相、起名命名、穿衣搭配、合婚择吉一站式解读。本地档案、可选每日推送（默认关闭）、
   浏览器六爻界面与 HTML 报告。仅作文化参考，不替代医疗、法律、心理、财务、婚姻等
   专业建议；遇重大决策请咨询专业人士。
 metadata:
@@ -12,7 +12,7 @@ metadata:
     - "腾讯高级研发-enoyao"
     - "腾讯高级产品运营-rekyhe"
   version: 1.2.0
-  keywords: 八字, 紫微斗数, 奇门遁甲, 六爻, 梅花易数, 塔罗, 星盘, 九宫飞星, 今日运势, 每日运程, 合婚, 择吉, 生命灵数, 风水, 算命, BaZi, ZiWei, QiMen, Tarot, feng shui, I Ching, numerology, daily horoscope
+  keywords: 八字, 紫微斗数, 奇门遁甲, 六爻, 梅花易数, 塔罗, 星盘, 九宫飞星, 掌纹, 手相, 面相, 起名, 命名, 取名, 穿衣, 搭配, 颜色, 五行色, 开运色, 今日运势, 每日运程, 合婚, 择吉, 生命灵数, 风水, 算命, BaZi, ZiWei, QiMen, Tarot, feng shui, I Ching, numerology, daily horoscope, palmistry, physiognomy, naming, dressing
   # 触发关键词收紧：1.1.8 移除「算命 / 占卜 / 命理 / 数字命理 / fortune telling / astrology」等过宽泛词，
   # 避免在用户未明确要求占卜的对话中误激活本 skill；仅在明确出现具体体系名称或具体主题时才被触发。
   openclaw:
@@ -104,6 +104,10 @@ metadata:
 | 今日 / 每日运势 | "今日运势如何" |
 | 合婚 / 关系分析 | "我和他的八字合吗" |
 | 择吉 / 择时 | "下个月哪天开业好" |
+| 掌纹 / 手相 | "看看我的手相" |
+| 面相 / 观人 | "帮我看看面相" |
+| 起名 / 命名 | "给孩子起个名字" |
+| 穿衣 / 搭配 | "我适合穿什么颜色" |
 | 综合解读 | "帮我综合看看最近运势" |
 
 ---
@@ -138,7 +142,11 @@ metadata:
 | 9 | 九宫飞星 / 风水 | 方位吉凶、空间布局、年月飞星 |
 | 10 | 择时 / 择吉 | 开业、搬迁、沟通窗口 |
 | 11 | 关系合盘 / 婚恋 | 双方互动、复合、窗口期 |
-| 12 | 综合解读 | 自动选最适合的框架组合 |
+| 12 | 掌纹 / 手相 | 性格底色、健康倾向、发展轨迹 |
+| 13 | 面相 / 观人 | 三庭五眼、十二宫、性格与运势 |
+| 14 | 起名 / 命名 | 八字用神、五行补益、音形义 |
+| 15 | 穿衣 / 搭配 | 五行色彩、场合适配、风格方向 |
+| 16 | 综合解读 | 自动选最适合的框架组合 |
 
 详细分流规则与资料收集指南见：[references/intake-and-routing.md](references/intake-and-routing.md)
 
@@ -186,6 +194,10 @@ Step 6: 可选 — 生成 HTML 报告 / 保存记录
 | 六爻 / 梅花 | [references/yijing-divination-framework.md](references/yijing-divination-framework.md) |
 | 风水 / 择时 | [references/fengshui-and-timing-framework.md](references/fengshui-and-timing-framework.md) |
 | 关系 / 复合 / 窗口 | [references/relationship-and-timing.md](references/relationship-and-timing.md) |
+| 掌纹 / 手相 | [references/palmistry-framework.md](references/palmistry-framework.md) |
+| 面相 / 观人 | [references/physiognomy-framework.md](references/physiognomy-framework.md) |
+| 起名 / 命名 | [references/naming-framework.md](references/naming-framework.md) |
+| 穿衣 / 搭配 | [references/dressing-framework.md](references/dressing-framework.md) |
 | 道家玄学总览 | [references/dao-mysticism-framework.md](references/dao-mysticism-framework.md) |
 | 奇门排盘计算规则 | [references/qimen-calculation-rules.md](references/qimen-calculation-rules.md) |
 | 奇门解读指南 | [references/qimen-interpretation-guide.md](references/qimen-interpretation-guide.md) |
@@ -227,14 +239,18 @@ Step 6: 可选 — 生成 HTML 报告 / 保存记录
 
 ### 权重矩阵
 
-| 问题类型 | 八字 | 紫微 | 奇门 | 梅花 | 六爻 | 塔罗 | 星盘 |
-|----------|------|------|------|------|------|------|------|
-| 终身命格 | 40% | 30% | — | — | — | — | 30% |
-| 年度运势 | 40% | 30% | 20% | 10% | — | — | — |
-| 事业决策 | 30% | 20% | 30% | — | 20% | — | — |
-| 婚姻感情 | 40% | 30% | — | 10% | 20% | — | — |
-| 当下问事 | — | — | 30% | 40% | 30% | — | — |
-| 短期趋势 | — | — | 20% | 20% | 20% | 40% | — |
+| 问题类型 | 八字 | 紫微 | 奇门 | 梅花 | 六爻 | 塔罗 | 星盘 | 掌纹 | 面相 | 起名 | 穿衣 |
+|----------|------|------|------|------|------|------|------|------|------|------|------|
+| 终身命格 | 35% | 25% | — | — | — | — | 25% | 8% | 7% | — | — |
+| 年度运势 | 35% | 25% | 20% | 10% | — | — | — | 5% | 5% | — | — |
+| 事业决策 | 25% | 20% | 30% | — | 20% | — | — | 3% | 2% | — | — |
+| 婚姻感情 | 35% | 25% | — | 10% | 20% | — | — | 5% | 5% | — | — |
+| 当下问事 | — | — | 30% | 40% | 30% | — | — | — | — | — | — |
+| 短期趋势 | — | — | 20% | 20% | 20% | 40% | — | — | — | — | — |
+| 性格底色 | 20% | 20% | — | — | — | — | 20% | 20% | 20% | — | — |
+| 健康倾向 | 25% | — | — | — | — | — | 15% | 30% | 30% | — | — |
+| 起名命名 | 40% | 20% | — | — | — | — | 20% | — | — | 20% | — |
+| 穿衣搭配 | 25% | — | — | — | — | — | 15% | — | — | — | 60% |
 
 ### 交叉验证规则
 
@@ -244,6 +260,10 @@ Step 6: 可选 — 生成 HTML 报告 / 保存记录
 4. 问长期发展 → 优先八字/紫微/星盘/数字命理
 5. 问关系与窗口 → 关系专题 + 塔罗/奇门/六爻辅助
 6. 问空间与居住 → 风水框架 + 九宫飞星 + 现实建议
+7. 问性格底色与先天倾向 → 八字/紫微 + 掌纹/面相交叉
+8. 问健康隐患与体质 → 八字/星盘 + 掌纹/面相辅助（不替代医疗诊断）
+9. 问起名命名 → 八字用神为主 + 紫微/星盘气质参考 + 音形义审查
+10. 问穿衣搭配 → 八字喜用色为主 + 季节/场合/肤色现实适配
 
 ---
 
