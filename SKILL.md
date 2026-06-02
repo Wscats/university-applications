@@ -1,5 +1,5 @@
 ---
-name: university-applications
+name: 命理大师
 version: 1.2.6
 description: |
   全体系命理大师 — 八字四柱、紫微斗数、奇门遁甲、六爻、梅花易数、塔罗、星盘、

@@ -731,7 +731,12 @@ async function runPush({ dryRun = false, testUserId = null } = {}) {
   console.log('   ' + '─'.repeat(50));
   console.log(`\n   ✅ 推送完成: ${successCount} 成功${failCount > 0 ? `, ${failCount} 失败` : ''}\n`);
 
-  appendLog(logEntry);
+  // dry-run 模式下不写入任何日志，避免在调试/CI/共享终端中留下用户活动痕迹
+  if (!dryRun) {
+    appendLog(logEntry);
+  } else {
+    console.log('   🔒 dry-run 模式：未写入 push-log.json');
+  }
   return { successCount, failCount };
 }
 

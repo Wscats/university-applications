@@ -222,6 +222,10 @@ function generateReport(date, palaces, zhiFu, zhiShi, isYang, sanQiList) {
   let report = `
 🎴 【奇门遁甲盘】
 
+⚠️ 本排盘结果仅为传统文化中的象数推演，仅供文化爱好与思维参考。
+   不构成择日选时、方位决策、投资行为、人身安全或重大事务的专业依据。
+   涉及法律、医疗、财务、婚姻等重大问题，请咨询对应领域的专业人士。
+
 📋 基本信息
    日期：${date.toLocaleDateString('zh-CN')}
    时辰：${hourZhi}时
@@ -278,10 +282,10 @@ function generateReport(date, palaces, zhiFu, zhiShi, isYang, sanQiList) {
     });
   }
   
-  // 最佳方位
+  // 各宫气机描述（仅为象数参考，不作为行动指令）
   const goodPalaces = palaces.filter(p => judgeFortune(p, 0).includes('吉'));
   if (goodPalaces.length > 0) {
-    report += '\n🌟 最佳方位\n';
+    report += '\n🌟 各宫气机参考（象数推演，不作为方位行动指令）\n';
     goodPalaces.forEach(p => {
       report += `   ${p.direction}（${p.num}宫）- ${p.star?.name || ''}${p.door?.name || ''}\n`;
     });

@@ -480,6 +480,10 @@ function formatAnalysisReport(bazi) {
   const lines = [];
 
   lines.push(`━━ 八字深度分析 ━━`);
+  lines.push(`⚠️ 以下分析属于传统文化中的命理推演，仅供文化爱好与思维参考。`);
+  lines.push(`   不构成医疗诊断、法律建议、投资决策、就业指导或任何人身/财产安全依据。`);
+  lines.push(`   如有相关需求，请咨询对应领域的专业人士。`);
+  lines.push('');
   lines.push(`四柱：${bazi.year} ${bazi.month} ${bazi.day} ${bazi.hour}`);
   lines.push(`日主：${a.日主强弱.日主}（${a.日主强弱.五行}）`);
   lines.push('');
