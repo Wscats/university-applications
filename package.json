@@ -22,7 +22,11 @@
     "divination",
     "Chinese astrology"
   ],
-  "author": "MingLi Mentor Team",
+  "author": "腾讯高级研发-enoyao",
+  "contributors": [
+    "腾讯高级研发-enoyao",
+    "腾讯高级产品运营-rekyhe"
+  ],
   "license": "MIT",
   "engines": {
     "node": ">=18.0.0"

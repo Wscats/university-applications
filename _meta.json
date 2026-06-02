@@ -1,5 +1,9 @@
 {
   "slug": "university-applications",
   "name": "university-applications",
-  "version": "1.2.0"
+  "version": "1.2.0",
+  "author": [
+    "腾讯高级研发-enoyao",
+    "腾讯高级产品运营-rekyhe"
+  ]
 }

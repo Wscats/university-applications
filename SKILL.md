@@ -1,17 +1,16 @@
 ---
 name: university-applications
+version: 1.2.0
 description: |
-  全体系命理大师——融合八字/四柱、紫微斗数、奇门遁甲、六爻、梅花易数、塔罗、西方星盘、
-  数字命理、九宫飞星风水、择时择吉于一体的综合命理技能。支持用户注册与档案管理（本地）、
-  可选的每日运程推送（默认关闭）、交互式六爻占卜界面、九宫飞星计算脚本、HTML 报告生成。
-  自动识别体系与资料完整度，按 S/A/B/C 四级精度输出解读。
-  触发场景（需明确与命理/占卜/风水/吉凶相关，不覆盖医疗/法律/金融等专业什都）：
-    - 明确表达「占卜/起卦/插牌/排盘」意图；
-    - 明确提及具体体系名称（八字、紫微斗数、奇门遁甲、六爻、梅花易数、塔罗、星盘/占星术、纳音生肖、九宫飞星）；
-    - 明确表达「今日/本周/近期运势」、「择吉择时」、「八字合婚」、「生命灵数/数字命理」等明确主题。
-    注意：仅为文化/爱好参考，不是医疗、法律、心理、财务、婚姻专业建议；遇重大决策请咨询专业人士。
+  全体系命理大师 — 八字四柱、紫微斗数、奇门遁甲、六爻、梅花易数、塔罗、星盘、
+  数字命理、九宫飞星风水、合婚择吉一站式解读。本地档案、可选每日推送（默认关闭）、
+  浏览器六爻界面与 HTML 报告。仅作文化参考，不替代医疗、法律、心理、财务、婚姻等
+  专业建议；遇重大决策请咨询专业人士。
 metadata:
   displayName: "命理大师"
+  author:
+    - "腾讯高级研发-enoyao"
+    - "腾讯高级产品运营-rekyhe"
   version: 1.2.0
   keywords: 八字, 紫微斗数, 奇门遁甲, 六爻, 梅花易数, 塔罗, 星盘, 九宫飞星, 今日运势, 每日运程, 合婚, 择吉, 生命灵数, 风水, 算命, BaZi, ZiWei, QiMen, Tarot, feng shui, I Ching, numerology, daily horoscope
   # 触发关键词收紧：1.1.8 移除「算命 / 占卜 / 命理 / 数字命理 / fortune telling / astrology」等过宽泛词，
@@ -67,8 +66,9 @@ metadata:
         The 'channels' field in user profiles (e.g. telegram) is a routing hint for
         the OpenClaw runtime, not a direct API integration. This skill does not hold
         or require any third-party API tokens (Telegram Bot Token, SMTP credentials,
-        webhook URLs, etc.). publish.sh is a local-only version management script
-        with no remote upload.
+        webhook URLs, etc.). The local-only release helper script is excluded
+        from the published bundle via .clawhubignore and is not part of the
+        installed skill surface.
         EXCEPTION — OPTIONAL LLM NETWORK USE: the browser-only file liuyao/index.html
         exposes an optional "LLM divination" button. If and only if the user clicks
         it and fills in their own API key + endpoint, the browser (not the skill
@@ -271,7 +271,8 @@ node "{baseDir}/scripts/profile.js" add <userId> spouse|child <姓名> <出生�
 
 # 排盘
 node "{baseDir}/scripts/ziwei.js" <出生日期> <性别> [时辰]
-node "{baseDir}/scripts/bazi-analysis.js" <出生日期> <出生时间> [性别]
+node "{baseDir}/scripts/bazi-analysis.js" <年柱> <月柱> <日柱> <时柱>
+# 示例：node scripts/bazi-analysis.js 丙寅 己亥 乙丑 乙酉
 node "{baseDir}/scripts/qimen.js" [日期] [时辰]
 node "{baseDir}/scripts/jieqi.js"
 
@@ -384,7 +385,6 @@ openclaw cron delete <任务ID>    # 也可直接按 ID 删除
 data/profiles/{userId}.json   # 用户档案（姓名/出生/家庭成员八字）
 data/push-log.json            # 推送日志（仅记录本地执行状态）
 scripts/                      # 所有计算脚本（纯本地计算，无网络调用）
-scripts/publish.sh            # 本地版本管理脚本（无远程上传）
 liuyao/                       # 六爻交互界面
 ```
 

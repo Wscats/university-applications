@@ -1528,9 +1528,19 @@ function main() {
   if (SHICHEN_MAP[timeStr] !== undefined) {
     hour = SHICHEN_MAP[timeStr];
     minute = 0;
+  } else if (typeof timeStr === 'string' && /[子丑寅卯辰巳午未申酉戌亥]/.test(timeStr)) {
+    // 兼容「子时 / 申时 / 5时」等带中文写法：取首个匹配到的地支
+    const m = timeStr.match(/[子丑寅卯辰巳午未申酉戌亥]/);
+    hour = m ? SHICHEN_MAP[m[0]] : 12;
+    minute = 0;
   } else {
-    [hour, minute = 0] = timeStr.split(':').map(Number);
+    [hour, minute = 0] = String(timeStr).split(':').map(Number);
   }
+  // 防御：任何解析失败都回退到中午 12:00，避免输出 NaN:00
+  if (!Number.isFinite(hour))   hour = 12;
+  if (!Number.isFinite(minute)) minute = 0;
+  hour = Math.min(23, Math.max(0, Math.floor(hour)));
+  minute = Math.min(59, Math.max(0, Math.floor(minute)));
 
   try {
     const result = analyzePlate(year, month, day, hour, minute, sex);
