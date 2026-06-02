@@ -718,12 +718,20 @@ async function runPush({ dryRun = false, testUserId = null } = {}) {
         status: dryRun ? 'dry-run' : (sent ? 'success' : 'failed')
       });
     } catch (e) {
-      console.log(`❌ ${e.message}`);
+      // 错误消息可能包含 userId /姓名/路径等敏感信息；脱敏后输出，防止 CI/共享终端泄露。
+      const rawMsg = String(e.message || '');
+      const sanitized = rawMsg
+        .replace(/\b[a-zA-Z0-9_-]{4,}\b/g, '[ID]')
+        .replace(/\/data\/profiles\/[^\s]+/g, '[PROFILE_PATH]')
+        .replace(/\/data\/outbox\/[^\s]+/g, '[OUTBOX_PATH]')
+        .replace(/[\u4e00-\u9fa5]{2,}/g, '[NAME]');
+      console.log(`❌ ${sanitized}`);
       failCount++;
       logEntry.results.push({
         userIdHash: require('crypto').createHash('sha256').update(String(profile.userId || '')).digest('hex').slice(0, 8),
         status: 'error',
-        error: e.message
+        // 日志中亦不保存原始错误明细，仅标记发生错误
+        error: 'processing_failed'
       });
     }
   }
