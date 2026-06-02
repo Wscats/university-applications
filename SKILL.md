@@ -1,13 +1,13 @@
 ---
 name: university-applications
-version: 1.2.1
+version: 1.2.2
 description: |
   全体系命理大师 — 八字四柱、紫微斗数、奇门遁甲、六爻、梅花易数、塔罗、星盘、
   数字命理、九宫飞星风水、合婚择吉一站式解读。本地档案、可选每日推送（默认关闭）、
   浏览器六爻界面与 HTML 报告。仅作文化参考，不替代医疗、法律、心理、财务、婚姻等
   专业建议；遇重大决策请咨询专业人士。
 metadata:
-  displayName: "命理大师"
+  displayName: "命理大师 · Chinese Divination Master"
   author:
     - "腾讯高级研发-enoyao"
     - "腾讯高级产品运营-rekyhe"
